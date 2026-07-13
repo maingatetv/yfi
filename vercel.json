@@ -1,0 +1,18 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/fetch-data",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/update-tvl",
+      "schedule": "*/5 * * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
+}
