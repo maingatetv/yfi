@@ -623,7 +623,10 @@ app.get("/api/yields", async (req, res) => {
       {"protocol":"RealT-DET123","market_type":"REAL ESTATE","chain":"Polygon","apy":9.5,"tvl":2000000,"risk_score":3,"min_deposit_usd":50,"execution_endpoint":"https://upfrica.africa/api/rwa-execute"},
       {"protocol":"Lofty-CHI456","market_type":"REAL ESTATE","chain":"Base","apy":10.2,"tvl":3500000,"risk_score":4,"min_deposit_usd":50,"execution_endpoint":"https://upfrica.africa/api/rwa-execute"},
       {"protocol":"Paxos-PAXG","market_type":"COMMODITIES","chain":"Arbitrum","apy":6.4,"tvl":15000000,"risk_score":1,"min_deposit_usd":100,"execution_endpoint":"https://upfrica.africa/api/commodities-execute"},
-      {"protocol":"Tether-XAUT","market_type":"COMMODITIES","chain":"Arbitrum","apy":5.8,"tvl":4500000,"risk_score":1,"min_deposit_usd":100,"execution_endpoint":"https://upfrica.africa/api/commodities-execute"}
+      {"protocol":"Tether-XAUT","market_type":"COMMODITIES","chain":"Arbitrum","apy":5.8,"tvl":4500000,"risk_score":1,"min_deposit_usd":100,"execution_endpoint":"https://upfrica.africa/api/commodities-execute"},
+      {"protocol":"Maple-Credit","market_type":"CREDIT","chain":"Ethereum","apy":14.0,"tvl":45000000,"risk_score":4,"min_deposit_usd":5000,"execution_endpoint":"https://upfrica.africa/api/credit-execute"},
+      {"protocol":"Goldfinch-Credit","market_type":"CREDIT","chain":"Ethereum","apy":12.5,"tvl":12000000,"risk_score":4,"min_deposit_usd":1000,"execution_endpoint":"https://upfrica.africa/api/credit-execute"},
+      {"protocol":"Aave-Credit","market_type":"CREDIT","chain":"Ethereum","apy":8.4,"tvl":25000000,"risk_score":2,"min_deposit_usd":100,"execution_endpoint":"https://upfrica.africa/api/credit-execute"}
     ];
 
     const mappedNewYields = newYieldsRaw.map((item, idx) => {
@@ -946,7 +949,7 @@ app.post("/api/commodities-execute", async (req, res) => {
     return res.status(400).json({ error: "Invalid amount. Must be greater than zero.", last_updated: new Date().toISOString() });
   }
 
-  const fee_taken_usd = amountNum * 0.01; // 1% fee
+  const fee_taken_usd = amountNum * 0.0025; // 0.25% fee
   const profit_usd = amountNum * 0.08; // Proportional 8% profit based on target ($800 profit for $10000 amount)
 
   try {
@@ -1215,6 +1218,98 @@ app.post("/api/fx-execute", async (req, res) => {
     tx_hash: "0xfake"
   });
 });
+
+// GET Credit Arbitrage Spreads (Top 5)
+app.get("/api/credit", (req, res) => {
+  const creditOpportunities = [
+    {
+      protocol: "Maple",
+      borrow_apy: 8.5,
+      lend_apy: 14.0,
+      spread: 5.5
+    },
+    {
+      protocol: "Goldfinch",
+      borrow_apy: 7.8,
+      lend_apy: 12.5,
+      spread: 4.7
+    },
+    {
+      protocol: "Aave",
+      borrow_apy: 5.1,
+      lend_apy: 8.4,
+      spread: 3.3
+    },
+    {
+      protocol: "Ondo",
+      borrow_apy: 4.8,
+      lend_apy: 7.8,
+      spread: 3.0
+    },
+    {
+      protocol: "Clearpool",
+      borrow_apy: 9.2,
+      lend_apy: 11.5,
+      spread: 2.3
+    }
+  ];
+  return res.json(creditOpportunities);
+});
+
+// POST Credit Arbitrage Execute
+app.post("/api/credit-execute", async (req, res) => {
+  const amount = req.body.amount !== undefined ? req.body.amount : (req.body.amount_usdc !== undefined ? req.body.amount_usdc : 1000000);
+
+  const amountNum = Number(amount);
+  if (isNaN(amountNum) || amountNum <= 0) {
+    return res.status(400).json({ error: "Invalid amount. Must be greater than zero.", last_updated: new Date().toISOString() });
+  }
+
+  const fee = amountNum * 0.01; // 1% fee
+  const spread_profit = amountNum * 0.055; // 5.5% profit on top spread (Maple)
+  const borrowed_usd = amountNum;
+  const lent_usd = amountNum;
+
+  try {
+    const db = await readDb();
+    if (db.total_credit_deployed === undefined) {
+      db.total_credit_deployed = 45000000; // default initial metric
+    }
+    db.total_credit_deployed += amountNum;
+
+    const bot_id = req.body.bot_id || "credit-bot-api";
+    const newTx = {
+      id: `tx-credit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      user_wallet: bot_id,
+      bot_id: bot_id,
+      amount: amountNum,
+      protocol: "Corporate Credit (Maple - borrowing at 8.5%, lending at 14%)",
+      tx_hash: "0x" + crypto.randomBytes(32).toString("hex"),
+      fee_collected: fee,
+      chain: "Ethereum",
+      timestamp: new Date().toISOString(),
+      is_bot: true,
+      destination_wallet: req.body.destination_wallet || "0x0"
+    };
+
+    db.transactions.push(newTx);
+    await writeDb(db);
+
+    // Trigger Webhooks for live alerts
+    triggerWebhooks("CREDIT_ROUTE_EXECUTED", newTx);
+  } catch (e) {
+    console.error("Failed to update credit state in DB:", e);
+  }
+
+  return res.status(200).json({
+    success: true,
+    borrowed_usd,
+    lent_usd,
+    spread_profit: Number(spread_profit.toFixed(2)),
+    fee: Number(fee.toFixed(2))
+  });
+});
+
 
 // POST Batch Bot Execute for institutional scale
 app.post("/api/execute/batch", async (req, res) => {
@@ -1845,7 +1940,8 @@ app.get("/api/admin/deposits", validateAdmin, async (req, res) => {
         totalUsers: uniqueUsers,
         topBots,
         insurance_tvl: db.insurance_tvl !== undefined ? db.insurance_tvl : 2500000,
-        insurance_claims_paid: db.insurance_claims_paid !== undefined ? db.insurance_claims_paid : 120000
+        insurance_claims_paid: db.insurance_claims_paid !== undefined ? db.insurance_claims_paid : 120000,
+        total_credit_deployed: db.total_credit_deployed !== undefined ? db.total_credit_deployed : 45000000
       },
       last_updated: new Date().toISOString()
     });

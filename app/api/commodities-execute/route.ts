@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       return Response.json({ error: "Invalid amount. Must be greater than zero." }, { status: 400 });
     }
 
-    const fee_taken_usd = amountNum * 0.01; // 1% fee
+    const fee_taken_usd = amountNum * 0.0025; // 0.25% fee
     const profit_usd = amountNum * 0.08; // Proportional 8% profit based on target ($800 profit for $10000 amount)
 
     return Response.json({

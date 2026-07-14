@@ -68,7 +68,8 @@ export default function App() {
     totalUsers: 0,
     topBots: [] as { bot_id: string; volume: number; fees: number; txCount: number }[],
     insurance_tvl: 2500000,
-    insurance_claims_paid: 120000
+    insurance_claims_paid: 120000,
+    total_credit_deployed: 45000000
   });
   const [isAdminLoading, setIsAdminLoading] = useState(false);
 
@@ -549,42 +550,37 @@ export default function App() {
 
   return (
     <div 
-      className={`min-h-screen text-zinc-100 font-sans flex flex-col p-4 md:p-8 overflow-x-hidden antialiased select-none relative transition-all duration-500`}
-      style={{ 
-        background: isInstitutionalMode 
-          ? "linear-gradient(135deg, #020402 0%, #081208 50%, #030603 100%)" 
-          : "linear-gradient(135deg, #0a0f1e 0%, #1a233a 50%, #0a1a2f 100%)" 
-      }}
+      className={`min-h-screen text-zinc-800 font-sans flex flex-col p-4 md:p-8 overflow-x-hidden antialiased select-none relative transition-all duration-300 bg-white`}
     >
       {/* Animated Grid Background */}
-      <div className={`absolute inset-0 bg-[linear-gradient(to_right,#00d4ff04_1px,transparent_1px),linear-gradient(to_bottom,#00d4ff04_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none transition-all ${
-        isInstitutionalMode ? "border border-lime-500/5 bg-[linear-gradient(to_right,#10b98108_1px,transparent_1px),linear-gradient(to_bottom,#10b98108_1px,transparent_1px)]" : ""
+      <div className={`absolute inset-0 bg-[linear-gradient(to_right,#00000006_1px,transparent_1px),linear-gradient(to_bottom,#00000006_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none transition-all ${
+        isInstitutionalMode ? "border border-emerald-500/5 bg-[linear-gradient(to_right,#10b98108_1px,transparent_1px),linear-gradient(to_bottom,#10b98108_1px,transparent_1px)]" : ""
       }`} />
       
       {/* HEADER SECTION */}
-      <header className={`flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-6 gap-4 transition-colors ${isInstitutionalMode ? "border-emerald-950" : "border-zinc-800"}`}>
+      <header className={`flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-6 gap-4 transition-colors ${isInstitutionalMode ? "border-emerald-100" : "border-zinc-200"}`}>
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsAdminView(false)}>
-          <div className={`w-10 h-10 flex items-center justify-center rounded-sm font-bold text-xl italic text-zinc-950 transition-all duration-300 ${
+          <div className={`w-10 h-10 flex items-center justify-center rounded-sm font-bold text-xl italic text-white transition-all duration-300 ${
             isInstitutionalMode 
-              ? "bg-lime-400 shadow-[4px_4px_0px_#064e3b]" 
-              : "bg-blue-600 text-white shadow-[4px_4px_0px_#1e3a8a]"
+              ? "bg-emerald-600 shadow-[4px_4px_0px_#064e3b]" 
+              : "bg-blue-600 shadow-[4px_4px_0px_#1e3a8a]"
           }`}>
             YF
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className={`text-2xl font-black tracking-tighter leading-none uppercase transition-colors ${isInstitutionalMode ? "text-lime-400" : "text-zinc-100"}`}>
+              <h1 className={`text-2xl font-black tracking-tighter leading-none uppercase transition-colors ${isInstitutionalMode ? "text-emerald-700" : "text-zinc-900"}`}>
                 YieldFi
               </h1>
               <span className={`text-[8px] px-1.5 py-0.5 border font-mono rounded-none uppercase tracking-wider ${
                 isInstitutionalMode
-                  ? "bg-emerald-950/40 border-emerald-500/30 text-emerald-400"
-                  : "bg-blue-950/40 border-blue-500/30 text-blue-400"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                  : "bg-blue-50 border-blue-200 text-blue-700"
               }`}>
                 1.0% Flat Fee. $7.5T Daily Volume
               </span>
             </div>
-            <p className={`text-[10px] font-mono tracking-widest uppercase mt-1 transition-colors ${isInstitutionalMode ? "text-emerald-500" : "text-blue-500"}`}>
+            <p className={`text-[10px] font-mono tracking-widest uppercase mt-1 transition-colors ${isInstitutionalMode ? "text-emerald-600" : "text-blue-600"}`}>
               YieldFi | 1.0% Flat Fee on All Actions
             </p>
           </div>
@@ -596,8 +592,8 @@ export default function App() {
             onClick={() => setIsAdminView(false)}
             className={`pb-1 transition-all ${
               !isAdminView 
-                ? (isInstitutionalMode ? "text-lime-400 border-b-2 border-lime-400 font-bold" : "text-blue-500 border-b-2 border-blue-500 font-bold") 
-                : "hover:text-zinc-100 font-medium"
+                ? (isInstitutionalMode ? "text-emerald-600 border-b-2 border-emerald-600 font-bold" : "text-blue-600 border-b-2 border-blue-600 font-bold") 
+                : "hover:text-zinc-900 font-medium text-zinc-500"
             }`}
           >
             Dashboard
@@ -611,8 +607,8 @@ export default function App() {
             }}
             className={`pb-1 transition-all flex items-center gap-1.5 ${
               isAdminView 
-                ? (isInstitutionalMode ? "text-lime-400 border-b-2 border-lime-400 font-bold" : "text-blue-500 border-b-2 border-blue-500 font-bold") 
-                : "hover:text-zinc-100 font-medium"
+                ? (isInstitutionalMode ? "text-emerald-600 border-b-2 border-emerald-600 font-bold" : "text-blue-600 border-b-2 border-blue-600 font-bold") 
+                : "hover:text-zinc-900 font-medium text-zinc-500"
             }`}
           >
             {isAdminLoggedIn ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
@@ -623,11 +619,11 @@ export default function App() {
             onClick={() => setIsInstitutionalMode(!isInstitutionalMode)}
             className={`pb-1 transition-all flex items-center gap-1.5 uppercase ${
               isInstitutionalMode 
-                ? "text-lime-400 font-bold" 
-                : "text-zinc-500 hover:text-zinc-300 font-medium"
+                ? "text-emerald-600 font-bold" 
+                : "text-zinc-500 hover:text-zinc-800 font-medium"
             }`}
           >
-            <span className={`w-2 h-2 rounded-full ${isInstitutionalMode ? "bg-lime-400 animate-pulse shadow-[0_0_8px_#84cc16]" : "bg-zinc-700"}`} />
+            <span className={`w-2 h-2 rounded-full ${isInstitutionalMode ? "bg-emerald-600 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.3)]" : "bg-zinc-300"}`} />
             Institutional Mode
           </button>
         </nav>
@@ -635,7 +631,7 @@ export default function App() {
         {/* WALLET AND STATE CONTROLS */}
         <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
           <div className="flex flex-col items-end">
-            <span className="text-[10px] text-zinc-500 uppercase font-extrabold tracking-wider">
+            <span className="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">
               {walletConnected ? (
                 walletChainId === "1" ? "Ethereum Mainnet" :
                 walletChainId === "137" ? "Polygon Mainnet" :
@@ -643,7 +639,7 @@ export default function App() {
                 `Network (${walletChainId})`
               ) : "Base Mainnet"}
             </span>
-            <span className="text-xs font-mono text-zinc-300">
+            <span className="text-xs font-mono text-zinc-600">
               {walletConnected 
                 ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
                 : "Disconnected"}
@@ -652,13 +648,13 @@ export default function App() {
 
           {walletConnected ? (
             <div className="flex items-center gap-2">
-              <div className="border border-zinc-800 bg-zinc-900/40 px-3 py-1.5 hidden lg:block text-right">
-                <span className="text-[9px] text-zinc-500 uppercase font-mono block">Stable Balance</span>
-                <span className="text-xs font-mono text-zinc-300 font-bold">{walletBalance} USDC</span>
+              <div className="border border-zinc-200 bg-zinc-50 px-3 py-1.5 hidden lg:block text-right">
+                <span className="text-[9px] text-zinc-400 uppercase font-mono block">Stable Balance</span>
+                <span className="text-xs font-mono text-zinc-700 font-bold">{walletBalance} USDC</span>
               </div>
               <button
                 onClick={disconnectWallet}
-                className="px-5 py-2 bg-zinc-100 text-zinc-950 text-xs font-bold uppercase tracking-widest hover:bg-white active:translate-y-px transition-all rounded-none"
+                className="px-5 py-2 bg-zinc-100 text-zinc-800 border border-zinc-300 text-xs font-bold uppercase tracking-widest hover:bg-zinc-200 active:translate-y-px transition-all rounded-none"
               >
                 Disconnect
               </button>
@@ -691,21 +687,21 @@ export default function App() {
             className="flex-grow py-8 flex flex-col space-y-8 overflow-hidden"
           >
             {/* HERO TVL METRIC CARD */}
-            <div className="border border-zinc-800 bg-zinc-950/40 backdrop-blur-md p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 rounded-none relative overflow-hidden shadow-[0_8px_32px_0_rgba(0,212,255,0.03)]">
-              <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-[#00d4ff]/5 to-transparent pointer-events-none" />
+            <div className="border border-zinc-200 bg-zinc-50 p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 rounded-none relative overflow-hidden shadow-sm">
+              <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-blue-50/20 to-transparent pointer-events-none" />
               <div className="space-y-1">
-                <span className="text-[10px] font-mono text-[#00D4FF] uppercase tracking-widest block font-bold">
+                <span className="text-[10px] font-mono text-blue-600 uppercase tracking-widest block font-bold">
                   Global RWA + DeFi Yield Aggregation
                 </span>
-                <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-none text-zinc-100 font-sans">
-                  Total Value Routed: <span className="text-[#00FF88] font-mono">${totalTvl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-none text-zinc-900 font-sans">
+                  Total Value Routed: <span className="text-emerald-600 font-mono">${totalTvl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </h2>
                 <p className="text-xs text-zinc-500 font-sans max-w-xl">
                   Aggregated institutional capital allocations plus real-time liquidity deployments. Live-synchronized.
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 self-end md:self-center font-mono text-[10px] text-[#00FF88] uppercase font-bold tracking-widest border border-zinc-800 bg-zinc-950/80 px-3.5 py-2">
-                <span className="w-2 h-2 bg-[#00FF88] rounded-full animate-pulse shadow-[0_0_8px_#00ff88]" />
+              <div className="flex items-center gap-1.5 self-end md:self-center font-mono text-[10px] text-emerald-600 uppercase font-bold tracking-widest border border-zinc-200 bg-white px-3.5 py-2">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
                 Live Sync Active (10s)
               </div>
             </div>
@@ -716,21 +712,21 @@ export default function App() {
             <div className="lg:col-span-8 flex flex-col space-y-6">
               
               {/* Bot-Native Platform Banner */}
-              <div className="bg-[#00D4FF]/5 border border-[#00D4FF]/30 p-4 rounded-none flex items-center justify-between gap-4 shadow-[0_0_15px_rgba(0,212,255,0.05)]">
+              <div className="bg-blue-50/60 border border-blue-200 p-4 rounded-none flex items-center justify-between gap-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="h-2 w-2 bg-[#00D4FF] rounded-full animate-ping shadow-[0_0_8px_#00d4ff]" />
-                  <span className="text-[10px] md:text-xs font-mono font-black tracking-widest text-[#00D4FF] uppercase">
+                  <div className="h-2 w-2 bg-blue-500 rounded-full animate-ping shadow-[0_0_8px_rgba(59,130,246,0.3)]" />
+                  <span className="text-[10px] md:text-xs font-mono font-black tracking-widest text-blue-600 uppercase">
                     BOT-NATIVE YIELD ROUTER | 1% FEE | AUTO EXECUTION
                   </span>
                 </div>
-                <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-[9px] font-mono font-bold text-[#00FF88] uppercase">
+                <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 bg-white border border-zinc-200 text-[9px] font-mono font-bold text-emerald-600 uppercase">
                   CRAWLER ENGAGED
                 </div>
               </div>
 
               {/* Geometric Title Block */}
               <div>
-                <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase leading-tight mb-2 text-zinc-100">
+                <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase leading-tight mb-2 text-zinc-900">
                   Earn 5% - 20% APY on Real Assets.
                 </h2>
                 <p className="text-zinc-500 text-sm max-w-xl font-sans">
@@ -739,117 +735,127 @@ export default function App() {
               </div>
 
               {/* Dynamic Filter Controls */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-zinc-900/20 p-3 border border-zinc-800 rounded-none">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-zinc-50 p-3 border border-zinc-200 rounded-none">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
                   <input
                     type="text"
                     placeholder="Search yield pools, chains, or assets (USDC, OUSG)..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-none pl-9 pr-4 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
+                    className="w-full bg-white border border-zinc-300 rounded-none pl-9 pr-4 py-2 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
                   />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Market Type Filter Buttons */}
-                  <div className="flex bg-zinc-950 border border-zinc-800 p-0.5 rounded-none">
+                  <div className="flex bg-zinc-100 border border-zinc-200 p-0.5 rounded-none">
                     <button
                       onClick={() => setMarketTypeFilter("all")}
                       className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none ${
                         marketTypeFilter === "all"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       All
                     </button>
                     <button
                       onClick={() => setMarketTypeFilter("RWA")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-900 ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
                         marketTypeFilter === "RWA"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       RWA
                     </button>
                     <button
                       onClick={() => setMarketTypeFilter("LST")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-900 ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
                         marketTypeFilter === "LST"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       LST
                     </button>
                     <button
                       onClick={() => setMarketTypeFilter("PERP")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-900 ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
                         marketTypeFilter === "PERP"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       PERP
                     </button>
                     <button
                       onClick={() => setMarketTypeFilter("STABLE")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-900 ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
                         marketTypeFilter === "STABLE"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       STABLE
                     </button>
                     <button
                       onClick={() => setMarketTypeFilter("TBILL")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-900 ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
                         marketTypeFilter === "TBILL"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       TBILL
                     </button>
                     <button
                       onClick={() => setMarketTypeFilter("FX")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-900 ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
                         marketTypeFilter === "FX"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       FX
                     </button>
                     <button
                       onClick={() => setMarketTypeFilter("REAL ESTATE")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-900 ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
                         marketTypeFilter === "REAL ESTATE"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       REAL ESTATE
                     </button>
                     <button
                       onClick={() => setMarketTypeFilter("COMMODITIES")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-900 ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
                         marketTypeFilter === "COMMODITIES"
-                          ? (isInstitutionalMode ? "bg-lime-400 text-zinc-950 font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       COMMODITIES
+                    </button>
+                    <button
+                      onClick={() => setMarketTypeFilter("CREDIT")}
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
+                        marketTypeFilter === "CREDIT"
+                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
+                          : "text-zinc-500 hover:text-zinc-900"
+                      }`}
+                    >
+                      CREDIT
                     </button>
                   </div>
  
                   <select
                     value={chainFilter}
                     onChange={(e) => setChainFilter(e.target.value)}
-                    className="bg-zinc-950 border border-zinc-800 text-xs text-zinc-300 font-bold uppercase tracking-wider py-2 px-3 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer"
+                    className="bg-white border border-zinc-300 text-xs text-zinc-800 font-bold uppercase tracking-wider py-2 px-3 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer"
                   >
                     <option value="all">All Networks</option>
                     <option value="polygon_base">Polygon, Base</option>
@@ -860,18 +866,18 @@ export default function App() {
                     <option value="hyperliquid">Hyperliquid</option>
                     <option value="dydx">dYdX</option>
                   </select>
-
+ 
                   <select
                     value={riskFilter}
                     onChange={(e) => setRiskFilter(e.target.value)}
-                    className="bg-zinc-950 border border-zinc-800 text-xs text-zinc-300 font-bold uppercase tracking-wider py-2 px-3 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer"
+                    className="bg-white border border-zinc-300 text-xs text-zinc-800 font-bold uppercase tracking-wider py-2 px-3 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer"
                   >
                     <option value="all">All Risks</option>
                     <option value="low">Low Risk</option>
                     <option value="medium">Medium Risk</option>
                     <option value="high">High Risk</option>
                   </select>
-
+ 
                   <button 
                     onClick={() => {
                       setSearchQuery("");
@@ -879,16 +885,16 @@ export default function App() {
                       setRiskFilter("all");
                       setMarketTypeFilter("all");
                     }}
-                    className="p-2 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-zinc-200 border border-zinc-800 transition-all rounded-none"
+                    className="p-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-500 hover:text-zinc-800 border border-zinc-300 transition-all rounded-none"
                     title="Reset Filters"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
-
+ 
               {/* RWA / DeFi Yield Opportunities Table */}
-              <div className="border border-zinc-800/60 bg-zinc-950/40 backdrop-blur-md overflow-hidden rounded-none shadow-[0_8px_32px_0_rgba(0,212,255,0.02)]">
+              <div className="border border-zinc-200 bg-white overflow-hidden rounded-none shadow-sm">
                 {isLoading ? (
                   <div className="p-16 flex flex-col items-center justify-center gap-3">
                     <Loader2 className="h-6 w-6 text-[#00D4FF] animate-spin" />
@@ -896,41 +902,41 @@ export default function App() {
                   </div>
                 ) : filteredOpps.length === 0 ? (
                   <div className="p-16 text-center">
-                    <AlertCircle className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
-                    <p className="text-zinc-300 font-bold uppercase text-xs tracking-wider">No Markets Found</p>
-                    <p className="text-xs text-zinc-500 mt-1">Adjust search parameters or select different filters.</p>
+                    <AlertCircle className="h-8 w-8 text-zinc-400 mx-auto mb-2" />
+                    <p className="text-zinc-800 font-bold uppercase text-xs tracking-wider">No Markets Found</p>
+                    <p className="text-xs text-zinc-400 mt-1">Adjust search parameters or select different filters.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                      <thead className="bg-zinc-900/60 text-zinc-500 uppercase text-[10px] font-bold tracking-widest border-b border-zinc-850">
+                      <thead className="bg-zinc-50 text-zinc-500 uppercase text-[10px] font-bold tracking-widest border-b border-zinc-200">
                         <tr>
-                          <th className="p-4 border-b border-zinc-800">Protocol / Asset</th>
-                          <th className="p-4 border-b border-zinc-800 text-right">APY</th>
-                          <th className="p-4 border-b border-zinc-800 text-center">Risk</th>
-                          <th className="p-4 border-b border-zinc-800 text-right">TVL</th>
-                          <th className="p-4 border-b border-zinc-800 text-center">Chain</th>
-                          <th className="p-4 border-b border-zinc-800 text-right">Action</th>
+                          <th className="p-4 border-b border-zinc-200 text-zinc-500">Protocol / Asset</th>
+                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-right">APY</th>
+                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-center">Risk</th>
+                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-right">TVL</th>
+                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-center">Chain</th>
+                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-right">Action</th>
                         </tr>
                       </thead>
-                      <tbody className="text-sm divide-y divide-zinc-800/30">
+                      <tbody className="text-sm divide-y divide-zinc-100">
                         {filteredOpps.map((opp, idx) => (
                           <tr 
                             key={opp.id} 
-                            className={`border-b border-zinc-800/40 hover:bg-zinc-800/15 transition-colors ${
-                              idx % 2 === 0 ? "bg-zinc-900/5" : "bg-transparent"
+                            className={`border-b border-zinc-100 hover:bg-zinc-50/70 transition-colors ${
+                              idx % 2 === 0 ? "bg-zinc-50/30" : "bg-white"
                             }`}
                           >
                             <td className="p-4">
-                              <div className="font-bold text-zinc-200">{opp.name}</div>
-                              <div className="text-xs text-zinc-500 flex items-center gap-1.5 mt-0.5">
+                              <div className="font-bold text-zinc-900">{opp.name}</div>
+                              <div className="text-xs text-zinc-400 flex items-center gap-1.5 mt-0.5">
                                 <span className="font-mono">{opp.asset || "USDC"} Routing Spec</span>
                                 <span>•</span>
                                 <a 
                                   href={opp.deposit_url} 
                                   target="_blank" 
                                   rel="noreferrer" 
-                                  className="text-[#00D4FF] hover:underline inline-flex items-center gap-0.5"
+                                  className="text-blue-600 hover:text-blue-700 hover:underline inline-flex items-center gap-0.5"
                                 >
                                   Specs
                                   <ExternalLink className="h-2.5 w-2.5" />
@@ -938,7 +944,7 @@ export default function App() {
                               </div>
                             </td>
                             
-                            <td className="p-4 text-right text-[#00D4FF] font-mono font-bold text-base">
+                            <td className="p-4 text-right text-blue-600 font-mono font-bold text-base">
                               {opp.apy.toFixed(2)}%
                             </td>
  
@@ -949,15 +955,15 @@ export default function App() {
                             </td>
  
                             <td className="p-4 text-right">
-                              <span className="text-[#00FF88] font-mono text-xs font-semibold block">
+                              <span className="text-emerald-600 font-mono text-xs font-semibold block">
                                 {opp.tvl_usd === 0 ? "$0" : `$${(opp.tvl_usd / 1000000).toFixed(1)}M`}
                               </span>
-                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-emerald-950/40 border border-emerald-900/40 text-[8px] font-mono font-bold text-emerald-400 uppercase rounded-sm mt-0.5 tracking-tighter shadow-sm">
+                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-emerald-50 border border-emerald-100 text-[8px] font-mono font-bold text-emerald-700 uppercase rounded-sm mt-0.5 tracking-tighter shadow-sm">
                                 ✓ Verified Source
                               </span>
                             </td>
  
-                            <td className="p-4 text-center text-xs font-bold uppercase tracking-wider text-zinc-300">
+                            <td className="p-4 text-center text-xs font-bold uppercase tracking-wider text-zinc-600">
                               <span className={`px-2 py-0.5 rounded-sm border text-[10px] ${getChainColor(opp.chain)}`}>
                                 {opp.chain}
                               </span>
@@ -967,13 +973,13 @@ export default function App() {
                               {showDepositUi ? (
                                 <button
                                   onClick={() => openDepositModal(opp)}
-                                  className="px-4 py-1.5 bg-[#FFD700] text-zinc-950 hover:bg-[#e6c200] hover:text-black text-[10px] font-extrabold uppercase tracking-widest active:translate-y-px transition-all rounded-none shadow-[2px_2px_0px_#b39700]"
+                                  className="px-4 py-1.5 bg-[#FFD700] text-zinc-900 hover:bg-[#e6c200] border border-yellow-500/50 text-[10px] font-extrabold uppercase tracking-widest active:translate-y-px transition-all rounded-none shadow-[2px_2px_0px_#b39700]"
                                 >
                                   Deposit
                                 </button>
                               ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-950 border border-zinc-900 text-[10px] font-mono font-bold tracking-wider text-zinc-500 uppercase">
-                                  <span className="w-1.5 h-1.5 bg-[#00FF88] rounded-full animate-pulse shadow-[0_0_6px_#00ff88]" />
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-50 border border-zinc-200 text-[10px] font-mono font-bold tracking-wider text-zinc-400 uppercase">
+                                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_6px_#10b981]" />
                                   Bot API Only
                                 </span>
                               )}
@@ -992,46 +998,46 @@ export default function App() {
             <aside className="lg:col-span-4 flex flex-col gap-6">
               
               {/* Protocol Stats Widget */}
-              <div className="border border-zinc-800/80 p-6 bg-zinc-950/40 backdrop-blur-md rounded-none shadow-[0_4px_24px_0_rgba(0,212,255,0.02)]">
-                <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 mb-4">
+              <div className="border border-zinc-200 p-6 bg-white rounded-none shadow-sm">
+                <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-4">
                   Protocol Stats
                 </h3>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-[10px] text-zinc-500 uppercase font-extrabold tracking-wider">Deposited (TVL)</p>
-                    <p className="text-xl font-mono text-[#00FF88] font-bold mt-1">
+                    <p className="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">Deposited (TVL)</p>
+                    <p className="text-xl font-mono text-emerald-600 font-bold mt-1">
                       ${totalTvl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </p>
-                    <p className="text-[9px] text-[#00FF88] font-mono mt-1">+14.2% Monthly</p>
+                    <p className="text-[9px] text-emerald-600 font-mono mt-1">+14.2% Monthly</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-zinc-500 uppercase font-extrabold tracking-wider">Weighted APY</p>
-                    <p className="text-xl font-mono text-[#00D4FF] font-bold mt-1">
+                    <p className="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">Weighted APY</p>
+                    <p className="text-xl font-mono text-blue-600 font-bold mt-1">
                       {averageApy}%
                     </p>
-                    <p className="text-[9px] text-[#00D4FF]/80 font-mono mt-1">Weighted Index</p>
+                    <p className="text-[9px] text-blue-500 font-mono mt-1">Weighted Index</p>
                   </div>
                 </div>
               </div>
 
               {/* Bot API Monitor Section */}
-              <div className="border border-zinc-800/80 p-6 flex-grow rounded-none flex flex-col justify-between bg-zinc-950/40 backdrop-blur-md shadow-[0_4px_24px_0_rgba(0,212,255,0.02)]">
+              <div className="border border-zinc-200 p-6 flex-grow rounded-none flex flex-col justify-between bg-white shadow-sm">
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">
+                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
                       API Health Monitor
                     </h3>
-                    <span className="flex items-center gap-1.5 text-[10px] text-[#00FF88] font-bold uppercase tracking-wider">
-                      <span className="w-1.5 h-1.5 bg-[#00FF88] rounded-full animate-ping"></span>
+                    <span className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-bold uppercase tracking-wider">
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
                       Operational
                     </span>
                   </div>
 
-                  <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+                  <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
                     Automated aggregators and bot scrapers (DefiLlama parsers) are currently syncing with our on-chain stablecoin payload registry.
                   </p>
 
-                  <div className="bg-black/60 p-4 font-mono text-[11px] leading-relaxed border border-zinc-900 mb-4 h-48 overflow-y-auto rounded-none text-left backdrop-blur-sm">
+                  <div className="bg-zinc-950 p-4 font-mono text-[11px] leading-relaxed border border-zinc-900 mb-4 h-48 overflow-y-auto rounded-none text-left">
                     <div className="text-zinc-600">// Fetching live pool registry payload</div>
                     <div className="text-[#00D4FF]">GET /api/yields 200 OK</div>
                     <div className="text-zinc-400 mt-2">
@@ -1049,7 +1055,7 @@ export default function App() {
 
                 <button 
                   onClick={() => setIsAdminView(true)}
-                  className="w-full py-3 border border-zinc-800/80 text-[10px] uppercase font-bold tracking-widest hover:bg-zinc-900/60 hover:text-white transition-colors rounded-none"
+                  className="w-full py-3 border border-zinc-200 text-[10px] uppercase font-bold text-zinc-700 tracking-widest hover:bg-zinc-50 hover:text-zinc-900 transition-colors rounded-none"
                 >
                   View Admin Dashboard
                 </button>
@@ -1077,30 +1083,30 @@ export default function App() {
               
               /* ADMIN ACCESS GATE */
               <div className="max-w-md mx-auto py-12">
-                <div className="border border-zinc-800 p-8 bg-zinc-900/50 rounded-none space-y-6 shadow-[4px_4px_0px_#1e3a8a]">
+                <div className="border border-zinc-200 p-8 bg-white rounded-none space-y-6 shadow-sm">
                   <div className="text-center space-y-2">
-                    <div className="h-12 w-12 bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-blue-500">
+                    <div className="h-12 w-12 bg-zinc-50 border border-zinc-200 flex items-center justify-center mx-auto text-blue-600">
                       <Lock className="h-5 w-5" />
                     </div>
-                    <h3 className="font-bold text-xl uppercase tracking-tight text-zinc-100">Unlock Operator Registry</h3>
+                    <h3 className="font-bold text-xl uppercase tracking-tight text-zinc-900">Unlock Operator Registry</h3>
                     <p className="text-xs text-zinc-500">Enter secure keyphrase mapped to administrative environments</p>
                   </div>
 
                   <form onSubmit={handleAdminLogin} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">Admin Password</label>
+                      <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block font-bold">Admin Password</label>
                       <input
                         type="password"
                         value={adminPassword}
                         onChange={(e) => setAdminPassword(e.target.value)}
                         placeholder="••••••••••••••"
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
+                        className="w-full bg-white border border-zinc-300 rounded-none px-4 py-2.5 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
                         required
                       />
                     </div>
 
                     {adminLoginError && (
-                      <div className="bg-red-950/40 border border-red-900 text-red-400 p-3 rounded-none text-xs flex items-center gap-2">
+                      <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-none text-xs flex items-center gap-2">
                         <AlertCircle className="h-4 w-4 shrink-0" />
                         <span className="font-mono">{adminLoginError}</span>
                       </div>
@@ -1108,7 +1114,7 @@ export default function App() {
 
                     <button
                       type="submit"
-                      className="w-full py-3 bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 rounded-none active:translate-y-px transition-all"
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-widest rounded-none active:translate-y-px transition-all"
                     >
                       Verify Operator Key
                     </button>
@@ -1122,10 +1128,10 @@ export default function App() {
               <div className="space-y-6">
                 
                 {/* Operator Panel Header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-850 pb-5 gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-200 pb-5 gap-4">
                   <div>
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-zinc-100 flex items-center gap-2 font-mono">
-                      <Unlock className="h-5.5 w-5.5 text-[#00D4FF]" />
+                    <h2 className="text-2xl font-black uppercase tracking-tight text-zinc-900 flex items-center gap-2 font-mono">
+                      <Unlock className="h-5.5 w-5.5 text-blue-600" />
                       OPERATOR CONSOLE
                     </h2>
                     <p className="text-xs text-zinc-500 mt-1">Manage active markets, inspect automated route metrics, and audit ledger transactions</p>
@@ -1137,7 +1143,7 @@ export default function App() {
                         setAdminToken("");
                         setAdminPassword("");
                       }}
-                      className="text-xs font-bold uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-900 bg-red-950/20 px-4 py-2 rounded-none transition-all"
+                      className="text-xs font-bold uppercase tracking-widest text-red-600 hover:text-red-700 border border-red-200 bg-red-50 px-4 py-2 rounded-none transition-all"
                     >
                       Lock Operator Panel
                     </button>
@@ -1145,18 +1151,18 @@ export default function App() {
                 </div>
 
                 {/* Manual Override Controls Badge */}
-                <div className="border border-[#00D4FF]/30 bg-zinc-950/80 backdrop-blur-md p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-none shadow-[0_0_15px_rgba(0,212,255,0.05)]">
+                <div className="border border-blue-200 bg-blue-50/60 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-none shadow-sm">
                   <div className="space-y-1">
-                    <h3 className="text-sm font-bold text-[#00D4FF] uppercase tracking-wider font-mono">
+                    <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider font-mono">
                       PLATFORM OPERATION STATUS
                     </h3>
-                    <p className="text-xs text-zinc-400 font-sans">
+                    <p className="text-xs text-zinc-600 font-sans">
                       YieldFi executes routing operations automatically via high-speed API agents. The platform runs strictly in automated Bots-Only mode for optimal institutional compliance.
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#00FF88] bg-[#00FF88]/10 border border-[#00FF88]/30 px-3 py-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-[#00FF88] rounded-full animate-pulse shadow-[0_0_6px_#00ff88]" />
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.3)]" />
                       BOTS-ONLY MODE ACTIVE
                     </span>
                   </div>
@@ -1165,49 +1171,58 @@ export default function App() {
                 {/* Operator Key Metrics */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                   
-                  <div className="border border-zinc-800 p-6 bg-zinc-900/50 rounded-none relative overflow-hidden">
-                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-[#00D4FF] rounded-none" />
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold font-sans">Total Bot Volume Routed</p>
-                    <p className="text-2xl font-mono font-bold text-zinc-100 mt-2">
+                  <div className="border border-zinc-200 p-6 bg-white rounded-none relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-blue-400 rounded-none" />
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold font-sans">Total Bot Volume Routed</p>
+                    <p className="text-2xl font-mono font-bold text-zinc-900 mt-2">
                       ${adminMetrics.totalVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p className="text-[9px] text-zinc-500 font-mono mt-1">Sum of routed automated stablecoin deployments</p>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Sum of routed automated stablecoin deployments</p>
                   </div>
 
-                  <div className="border border-zinc-800 p-6 bg-zinc-900/50 rounded-none relative overflow-hidden">
+                  <div className="border border-zinc-200 p-6 bg-white rounded-none relative overflow-hidden shadow-sm">
                     <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-blue-500 rounded-none" />
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold font-sans">Total Fees Collected (1.0%)</p>
-                    <p className="text-2xl font-mono font-bold text-blue-500 mt-2">
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold font-sans">Total Fees Collected (1.0%)</p>
+                    <p className="text-2xl font-mono font-bold text-blue-600 mt-2">
                       ${adminMetrics.totalFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p className="text-[9px] text-zinc-500 font-mono mt-1">1.0% flat brokerage share split</p>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">1.0% flat brokerage share split</p>
                   </div>
 
-                  <div className="border border-zinc-800 p-6 bg-zinc-900/50 rounded-none relative overflow-hidden">
-                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-[#00FF88] rounded-none" />
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold font-sans">Total Automated Routes</p>
-                    <p className="text-2xl font-mono font-bold text-[#00FF88] mt-2">
+                  <div className="border border-zinc-200 p-6 bg-white rounded-none relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-emerald-400 rounded-none" />
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold font-sans">Total Automated Routes</p>
+                    <p className="text-2xl font-mono font-bold text-emerald-600 mt-2">
                       {adminMetrics.count || 0}
                     </p>
-                    <p className="text-[9px] text-zinc-500 font-mono mt-1">Total active program execution count</p>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Total active program execution count</p>
                   </div>
 
-                  <div className="border border-zinc-800 p-6 bg-zinc-900/50 rounded-none relative overflow-hidden">
-                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-emerald-400 rounded-none" />
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold font-sans">Insurance TVL</p>
-                    <p className="text-2xl font-mono font-bold text-emerald-400 mt-2">
+                  <div className="border border-zinc-200 p-6 bg-white rounded-none relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-emerald-500 rounded-none" />
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold font-sans">Insurance TVL</p>
+                    <p className="text-2xl font-mono font-bold text-emerald-600 mt-2">
                       ${(adminMetrics.insurance_tvl || 2500000).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p className="text-[9px] text-zinc-500 font-mono mt-1">90% Ondo TBILL, 10% Reserve</p>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">90% Ondo TBILL, 10% Reserve</p>
                   </div>
 
-                  <div className="border border-zinc-800 p-6 bg-zinc-900/50 rounded-none relative overflow-hidden">
-                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-rose-500 rounded-none" />
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold font-sans">Claims Paid</p>
-                    <p className="text-2xl font-mono font-bold text-rose-500 mt-2">
+                  <div className="border border-zinc-200 p-6 bg-white rounded-none relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-rose-400 rounded-none" />
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold font-sans">Claims Paid</p>
+                    <p className="text-2xl font-mono font-bold text-rose-600 mt-2">
                       ${(adminMetrics.insurance_claims_paid || 120000).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p className="text-[9px] text-zinc-500 font-mono mt-1">Instant payouts from reserve</p>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Instant payouts from reserve</p>
+                  </div>
+
+                  <div className="border border-zinc-200 p-6 bg-white rounded-none relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-blue-500 rounded-none" />
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold font-sans">Total Credit Deployed</p>
+                    <p className="text-2xl font-mono font-bold text-blue-600 mt-2">
+                      ${(adminMetrics.total_credit_deployed || 45000000).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-[9px] text-zinc-400 font-mono mt-1">Aggregated active borrowing syndications</p>
                   </div>
 
                 </div>
@@ -1219,61 +1234,61 @@ export default function App() {
                   <div className="lg:col-span-4 space-y-6">
                     
                     {/* Platform Wallet Balance Live Tracker */}
-                    <div className="border border-zinc-800 p-6 bg-zinc-950/40 backdrop-blur-md rounded-none space-y-4">
+                    <div className="border border-zinc-200 p-6 bg-white rounded-none space-y-4 shadow-sm">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">
+                        <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
                           PLATFORM FEE WALLET
                         </h3>
-                        <span className="flex items-center gap-1 text-[9px] text-[#00FF88] font-mono uppercase">
-                          <span className="w-1.5 h-1.5 bg-[#00FF88] rounded-full animate-ping" />
+                        <span className="flex items-center gap-1 text-[9px] text-emerald-600 font-mono uppercase">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
                           Secure
                         </span>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] text-zinc-500 uppercase font-bold">Harvester Wallet Address</p>
-                        <p className="text-xs font-mono text-zinc-400 truncate bg-black/40 p-2 border border-zinc-900">
+                        <p className="text-[10px] text-zinc-400 uppercase font-bold">Harvester Wallet Address</p>
+                        <p className="text-xs font-mono text-zinc-600 truncate bg-zinc-50 p-2 border border-zinc-200">
                           {platformFeeWallet || "0x0000000000000000000000000000000000000000"}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] text-zinc-500 uppercase font-bold">Platform Wallet Balance</p>
-                        <p className="text-3xl font-mono text-[#00FF88] font-black leading-none">
+                        <p className="text-[10px] text-zinc-400 uppercase font-bold">Platform Wallet Balance</p>
+                        <p className="text-3xl font-mono text-emerald-600 font-black leading-none">
                           ${adminMetrics.totalFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
-                        <p className="text-[9px] text-zinc-500 font-mono mt-1">100% of accumulated platform broker fees</p>
+                        <p className="text-[9px] text-zinc-400 font-mono mt-1">100% of accumulated platform broker fees</p>
                       </div>
                       <button 
                         onClick={() => alert("Withdrawal routing is executed automatically to cold-storage at contract settlement epochs.")}
-                        className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-zinc-200 border border-zinc-850 text-[10px] font-bold uppercase tracking-widest transition-all rounded-none cursor-pointer"
+                        className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-900 border border-zinc-350 text-[10px] font-bold uppercase tracking-widest transition-all rounded-none cursor-pointer"
                       >
                         Sweep Fees to Cold Wallet
                       </button>
                     </div>
 
                     {/* Top 5 Routing Bots Analytics */}
-                    <div className="border border-zinc-800 p-6 bg-zinc-950/40 backdrop-blur-md rounded-none space-y-4">
-                      <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">
+                    <div className="border border-zinc-200 p-6 bg-white rounded-none space-y-4 shadow-sm">
+                      <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
                         TOP ROUTING BOTS (BY VOLUME)
                       </h3>
                       {(!adminMetrics.topBots || adminMetrics.topBots.length === 0) ? (
-                        <p className="text-xs text-zinc-500 font-mono italic">No bot execution volume logged yet.</p>
+                        <p className="text-xs text-zinc-400 font-mono italic">No bot execution volume logged yet.</p>
                       ) : (
                         <div className="space-y-3">
                           {adminMetrics.topBots.map((bot, i) => (
-                            <div key={bot.bot_id} className="bg-black/20 p-3 border border-zinc-900/60 flex items-center justify-between">
+                            <div key={bot.bot_id} className="bg-zinc-50 p-3 border border-zinc-100 flex items-center justify-between">
                               <div className="space-y-1">
-                                <span className="text-[10px] font-mono font-bold text-[#00D4FF] block">
+                                <span className="text-[10px] font-mono font-bold text-blue-600 block">
                                   #{i + 1} {bot.bot_id}
                                 </span>
-                                <span className="text-[9px] text-zinc-500 font-mono block">
+                                <span className="text-[9px] text-zinc-400 font-mono block">
                                   {bot.txCount} execution{bot.txCount > 1 ? "s" : ""}
                                 </span>
                               </div>
                               <div className="text-right space-y-0.5">
-                                <span className="text-xs font-mono font-extrabold text-[#00FF88] block">
+                                <span className="text-xs font-mono font-extrabold text-emerald-600 block">
                                   ${bot.volume.toLocaleString()}
                                 </span>
-                                <span className="text-[9px] text-zinc-500 font-mono block">
+                                <span className="text-[9px] text-zinc-400 font-mono block">
                                   Fees: ${bot.fees.toLocaleString(undefined, { minimumFractionDigits: 1 })}
                                 </span>
                               </div>
@@ -1289,72 +1304,72 @@ export default function App() {
                   <div className="lg:col-span-8 space-y-6">
                     
                     {/* Register New Opportunity */}
-                    <div className="border border-zinc-800 p-6 bg-zinc-900/30 rounded-none space-y-4">
+                    <div className="border border-zinc-200 p-6 bg-white rounded-none space-y-4 shadow-sm">
                       <div>
-                        <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 mb-1">
+                        <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">
                           Register New Opportunity Pool Target
                         </h3>
-                        <p className="text-xs text-zinc-400">
+                        <p className="text-xs text-zinc-500">
                           Deploy a new institutional stablecoin or real-world asset (RWA) yield opportunity.
                         </p>
                       </div>
 
                       <form onSubmit={handleAddOpportunity} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-mono text-zinc-500 uppercase block font-bold">Pool Name</label>
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase block font-bold">Pool Name</label>
                           <input
                             type="text"
                             value={newOppName}
                             onChange={(e) => setNewOppName(e.target.value)}
                             placeholder="Ondo Finance OUSG"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-3 py-2 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
+                            className="w-full bg-white border border-zinc-300 rounded-none px-3 py-2 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
                             required
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-mono text-zinc-500 uppercase block font-bold">Target Contract/Wallet</label>
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase block font-bold">Target Contract/Wallet</label>
                           <input
                             type="text"
                             value={newOppWallet}
                             onChange={(e) => setNewOppWallet(e.target.value)}
                             placeholder="0x..."
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-3 py-2 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
+                            className="w-full bg-white border border-zinc-300 rounded-none px-3 py-2 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
                             required
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-mono text-zinc-500 uppercase block font-bold">APY %</label>
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase block font-bold">APY %</label>
                           <input
                             type="number"
                             step="0.01"
                             value={newOppApy}
                             onChange={(e) => setNewOppApy(e.target.value)}
                             placeholder="5.20"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-3 py-2 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
+                            className="w-full bg-white border border-zinc-300 rounded-none px-3 py-2 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
                             required
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-mono text-zinc-500 uppercase block font-bold">TVL $</label>
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase block font-bold">TVL $</label>
                           <input
                             type="number"
                             value={newOppTvl}
                             onChange={(e) => setNewOppTvl(e.target.value)}
                             placeholder="200000000"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-3 py-2 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
+                            className="w-full bg-white border border-zinc-300 rounded-none px-3 py-2 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
                             required
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-mono text-zinc-500 uppercase block font-bold">Settlement Chain</label>
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase block font-bold">Settlement Chain</label>
                           <select
                             value={newOppChain}
                             onChange={(e) => setNewOppChain(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-3 py-2 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer font-mono"
+                            className="w-full bg-white border border-zinc-300 rounded-none px-3 py-2 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer font-mono"
                           >
                             <option value="base">Base</option>
                             <option value="polygon">Polygon</option>
@@ -1363,11 +1378,11 @@ export default function App() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-mono text-zinc-500 uppercase block font-bold">Risk Weight</label>
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase block font-bold">Risk Weight</label>
                           <select
                             value={newOppRisk}
                             onChange={(e) => setNewOppRisk(e.target.value as any)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-3 py-2 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer font-mono"
+                            className="w-full bg-white border border-zinc-300 rounded-none px-3 py-2 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer font-mono"
                           >
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
@@ -1376,27 +1391,27 @@ export default function App() {
                         </div>
 
                         <div className="space-y-1 md:col-span-2">
-                          <label className="text-[10px] font-mono text-zinc-500 uppercase block font-bold">Protocol Info Link URL</label>
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase block font-bold">Protocol Info Link URL</label>
                           <input
                             type="url"
                             value={newOppUrl}
                             onChange={(e) => setNewOppUrl(e.target.value)}
                             placeholder="https://..."
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-3 py-2 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
+                            className="w-full bg-white border border-zinc-300 rounded-none px-3 py-2 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
                             required
                           />
                         </div>
 
                         <div className="md:col-span-2 pt-2">
                           {oppSubmitStatus === "success" && (
-                            <div className="bg-zinc-900 border border-emerald-500/30 text-emerald-400 p-3 rounded-none text-xs flex items-center gap-2 mb-3">
+                            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 p-3 rounded-none text-xs flex items-center gap-2 mb-3">
                               <CheckCircle className="h-4 w-4 shrink-0" />
                               <span>Opportunity published successfully!</span>
                             </div>
                           )}
 
                           {oppSubmitStatus === "error" && (
-                            <div className="bg-red-950/30 border border-red-900 text-red-400 p-3 rounded-none text-xs flex items-center gap-2 mb-3">
+                            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-none text-xs flex items-center gap-2 mb-3">
                               <AlertCircle className="h-4 w-4 shrink-0" />
                               <span>{oppSubmitError}</span>
                             </div>
@@ -1414,17 +1429,17 @@ export default function App() {
                     </div>
 
                   {/* Ledger logs */}
-                    <div className="border border-zinc-800 bg-zinc-900/30 rounded-none overflow-hidden">
-                      <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
+                    <div className="border border-zinc-200 bg-white rounded-none overflow-hidden shadow-sm">
+                      <div className="p-5 border-b border-zinc-200 flex items-center justify-between">
                         <div>
-                          <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">
+                          <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
                             Depositor Audit Registry Ledger
                           </h3>
-                          <p className="text-xs text-zinc-400 mt-1">Cryptographic logs of capital deployments</p>
+                          <p className="text-xs text-zinc-500 mt-1">Cryptographic logs of capital deployments</p>
                         </div>
                         <button 
                           onClick={() => fetchAdminDashboardData(adminToken)}
-                          className="p-2 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all rounded-none"
+                          className="p-2 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-zinc-500 hover:text-zinc-850 transition-all rounded-none"
                           title="Refresh logs"
                         >
                           <RefreshCw className="h-3.5 w-3.5" />
@@ -1434,19 +1449,19 @@ export default function App() {
                       {isAdminLoading ? (
                         <div className="p-12 text-center">
                           <Loader2 className="h-6 w-6 text-blue-500 animate-spin mx-auto mb-2" />
-                          <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Auditing cryptographic signatures...</p>
+                          <p className="text-xs font-mono text-zinc-400 uppercase tracking-widest">Auditing cryptographic signatures...</p>
                         </div>
                       ) : adminTransactions.length === 0 ? (
                         <div className="p-16 text-center">
-                          <FileSpreadsheet className="h-10 w-10 text-zinc-700 mx-auto mb-3" />
-                          <p className="text-zinc-400 font-bold uppercase text-xs">No logs registered</p>
-                          <p className="text-xs text-zinc-500 mt-1">Capital deposits routed to protocols will be logged here instantly.</p>
+                          <FileSpreadsheet className="h-10 w-10 text-zinc-300 mx-auto mb-3" />
+                          <p className="text-zinc-800 font-bold uppercase text-xs">No logs registered</p>
+                          <p className="text-xs text-zinc-400 mt-1">Capital deposits routed to protocols will be logged here instantly.</p>
                         </div>
                       ) : (
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className="bg-zinc-900 text-zinc-500 uppercase text-[10px] font-bold tracking-widest border-b border-zinc-800">
+                              <tr className="bg-zinc-50 text-zinc-500 uppercase text-[10px] font-bold tracking-widest border-b border-zinc-200">
                                 <th className="p-4">Depositor Wallet / Bot</th>
                                 <th className="p-4">Pool Target</th>
                                 <th className="p-4 text-right">Amount</th>
@@ -1455,23 +1470,23 @@ export default function App() {
                                 <th className="p-4 text-right">Hash</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-zinc-800/40 font-mono text-zinc-300">
+                            <tbody className="divide-y divide-zinc-100 font-mono text-zinc-700">
                               {adminTransactions.slice().reverse().map((tx) => (
-                                <tr key={tx.id} className="hover:bg-zinc-800/20 transition-colors">
-                                  <td className="p-4 font-mono text-zinc-400 text-xs">
+                                <tr key={tx.id} className="hover:bg-zinc-50/70 transition-colors">
+                                  <td className="p-4 font-mono text-zinc-500 text-xs">
                                     {tx.bot_id ? (
-                                      <span className="text-[#00D4FF] font-bold">{tx.bot_id}</span>
+                                      <span className="text-blue-600 font-bold">{tx.bot_id}</span>
                                     ) : (
                                       <span>{tx.user_wallet.slice(0, 6)}...{tx.user_wallet.slice(-4)}</span>
                                     )}
                                   </td>
-                                  <td className="p-4 font-sans font-bold text-zinc-200 text-xs">
+                                  <td className="p-4 font-sans font-bold text-zinc-900 text-xs">
                                     {tx.protocol}
                                   </td>
-                                  <td className="p-4 text-right font-mono text-zinc-100 font-bold">
+                                  <td className="p-4 text-right font-mono text-zinc-800 font-bold">
                                     {tx.amount.toLocaleString()} USDC
                                   </td>
-                                  <td className="p-4 text-right text-blue-400 font-bold">
+                                  <td className="p-4 text-right text-blue-600 font-bold">
                                     {tx.fee_collected.toFixed(2)} USDC
                                   </td>
                                   <td className="p-4 text-center">
@@ -1484,7 +1499,7 @@ export default function App() {
                                       href={getExplorerUrl(tx.chain, tx.tx_hash)}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="text-blue-500 hover:underline inline-flex items-center gap-1 text-[11px]"
+                                      className="text-blue-600 hover:underline inline-flex items-center gap-1 text-[11px]"
                                     >
                                       {tx.tx_hash.slice(0, 8)}...
                                       <ExternalLink className="h-3 w-3" />
@@ -1509,23 +1524,23 @@ export default function App() {
       </AnimatePresence>
 
       {/* FOOTER & DISCLAIMER */}
-      <footer className="mt-auto pt-8 border-t border-zinc-800 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-2">
+      <footer className="mt-auto pt-8 border-t border-zinc-200 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-2">
         <div>
-          <p className="text-xs text-zinc-400 font-bold tracking-tight mb-2">
+          <p className="text-xs text-zinc-800 font-bold tracking-tight mb-2">
             YieldFi © 2026 UpFrica. Powering global RWA liquidity.
           </p>
-          <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-tighter mb-1">
+          <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-tighter mb-1">
             Legal Disclaimer
           </p>
-          <p className="text-[9px] text-zinc-600 max-w-2xl leading-tight font-sans">
+          <p className="text-[9px] text-zinc-500 max-w-2xl leading-tight font-sans">
             The yields displayed are for informational purposes only. Smart contracts carry inherent risks including total loss of funds. This is not financial advice. YieldFi takes a 1.0% flat fee on deployments to maintain platform infrastructure and cross-chain bridging.
           </p>
         </div>
         <div className="text-left md:text-right shrink-0">
-          <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+          <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
             Built on Base Chain
           </p>
-          <p className="text-[9px] font-mono text-zinc-700 mt-1 uppercase tracking-tighter">
+          <p className="text-[9px] font-mono text-zinc-500 mt-1 uppercase tracking-tighter">
             TX: 0x9f8...2a41 - Last updated: seconds ago
           </p>
         </div>
@@ -1553,24 +1568,24 @@ export default function App() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.98, opacity: 0, y: 10 }}
               transition={{ duration: 0.2 }}
-              className="relative w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-none overflow-hidden shadow-2xl p-6 space-y-6 text-zinc-200"
+              className="relative w-full max-w-md bg-white border border-zinc-200 rounded-none overflow-hidden shadow-2xl p-6 space-y-6 text-zinc-800"
             >
               
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                    <Coins className="h-4.5 w-4.5 text-blue-500" />
+                  <div className="h-9 w-9 bg-zinc-50 border border-zinc-200 flex items-center justify-center">
+                    <Coins className="h-4.5 w-4.5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-100">Deposit USDC</h3>
-                    <p className="text-[10px] text-zinc-500 font-mono uppercase">Routing to {selectedOpp.chain.toUpperCase()}</p>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900">Deposit USDC</h3>
+                    <p className="text-[10px] text-zinc-400 font-mono uppercase">Routing to {selectedOpp.chain.toUpperCase()}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsDepositModalOpen(false)}
                   disabled={depositStatus === 'confirming' || depositStatus === 'processing'}
-                  className="text-zinc-500 hover:text-zinc-300 text-sm font-bold font-mono transition-colors"
+                  className="text-zinc-400 hover:text-zinc-600 text-sm font-bold font-mono transition-colors"
                 >
                   ✕
                 </button>
@@ -1581,18 +1596,18 @@ export default function App() {
                 <div className="space-y-5">
                   
                   {/* Pool info recap */}
-                  <div className="bg-zinc-900/40 border border-zinc-800 p-4 rounded-none space-y-2 font-mono text-[11px]">
-                    <div className="flex justify-between text-zinc-400">
-                      <span className="uppercase font-bold text-zinc-500">Pool Target</span>
-                      <span className="font-bold text-zinc-200">{selectedOpp.name}</span>
+                  <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-none space-y-2 font-mono text-[11px]">
+                    <div className="flex justify-between text-zinc-500">
+                      <span className="uppercase font-bold text-zinc-400">Pool Target</span>
+                      <span className="font-bold text-zinc-800">{selectedOpp.name}</span>
                     </div>
-                    <div className="flex justify-between text-zinc-400">
-                      <span className="uppercase font-bold text-zinc-500">Yield Rate</span>
-                      <span className="font-bold text-emerald-500">{selectedOpp.apy.toFixed(2)}% APY</span>
+                    <div className="flex justify-between text-zinc-500">
+                      <span className="uppercase font-bold text-zinc-400">Yield Rate</span>
+                      <span className="font-bold text-emerald-600">{selectedOpp.apy.toFixed(2)}% APY</span>
                     </div>
-                    <div className="flex justify-between text-zinc-400">
-                      <span className="uppercase font-bold text-zinc-500">Settlement Address</span>
-                      <span className="text-zinc-400">
+                    <div className="flex justify-between text-zinc-500">
+                      <span className="uppercase font-bold text-zinc-400">Settlement Address</span>
+                      <span className="text-zinc-600">
                         {selectedOpp.protocol_wallet.slice(0, 10)}...{selectedOpp.protocol_wallet.slice(-8)}
                       </span>
                     </div>
@@ -1601,7 +1616,7 @@ export default function App() {
                   {/* Input field */}
                   <div className="space-y-1.5 text-xs">
                     <div className="flex items-center justify-between font-mono">
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Amount (USDC)</label>
+                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Amount (USDC)</label>
                       <span className="text-zinc-500">Balance: {walletBalance} USDC</span>
                     </div>
                     <div className="relative">
@@ -1611,34 +1626,34 @@ export default function App() {
                         value={depositAmount}
                         onChange={(e) => setDepositAmount(e.target.value)}
                         placeholder="100"
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-none px-4 py-3 text-lg font-mono font-bold text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500/50 pr-16"
+                        className="w-full bg-white border border-zinc-300 rounded-none px-4 py-3 text-lg font-mono font-bold text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 pr-16"
                         required
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono font-bold text-xs text-zinc-500 bg-zinc-900 px-2 py-1 border border-zinc-800">
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono font-bold text-xs text-zinc-400 bg-zinc-50 px-2 py-1 border border-zinc-200">
                         USDC
                       </span>
                     </div>
-                    <p className="text-[10px] text-zinc-600 font-mono uppercase">Minimum required amount is 1 USDC.</p>
+                    <p className="text-[10px] text-zinc-400 font-mono uppercase">Minimum required amount is 1 USDC.</p>
                   </div>
 
                   {/* Fee logic breakdown */}
-                  <div className="bg-zinc-950 p-4 border border-zinc-900 space-y-1.5 font-mono text-[11px] text-zinc-400">
+                  <div className="bg-zinc-50 p-4 border border-zinc-200 space-y-1.5 font-mono text-[11px] text-zinc-600">
                     <div className="flex justify-between">
-                      <span className="font-bold text-zinc-500 uppercase">99.0% to Yield Pool</span>
-                      <span className="font-bold">{(Number(depositAmount) * 0.99 || 0).toFixed(2)} USDC</span>
+                      <span className="font-bold text-zinc-400 uppercase">99.0% to Yield Pool</span>
+                      <span className="font-bold text-zinc-700">{(Number(depositAmount) * 0.99 || 0).toFixed(2)} USDC</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="font-bold text-zinc-500 uppercase">1.0% Flat Service Fee</span>
-                      <span className="text-blue-500 font-bold">{(Number(depositAmount) * 0.01 || 0).toFixed(2)} USDC</span>
+                      <span className="font-bold text-zinc-400 uppercase">1.0% Flat Service Fee</span>
+                      <span className="text-blue-600 font-bold">{(Number(depositAmount) * 0.01 || 0).toFixed(2)} USDC</span>
                     </div>
-                    <div className="border-t border-zinc-900/60 pt-2 flex justify-between font-bold text-zinc-200">
-                      <span className="uppercase text-zinc-400 font-bold">Total Routed</span>
-                      <span className="text-zinc-100 font-black">{(Number(depositAmount) || 0).toFixed(2)} USDC</span>
+                    <div className="border-t border-zinc-200 pt-2 flex justify-between font-bold text-zinc-800">
+                      <span className="uppercase text-zinc-500 font-bold">Total Routed</span>
+                      <span className="text-zinc-900 font-black">{(Number(depositAmount) || 0).toFixed(2)} USDC</span>
                     </div>
                   </div>
 
                   {depositErrorMsg && (
-                    <div className="bg-red-950/30 border border-red-900 text-red-400 p-3 rounded-none text-xs flex items-center gap-2">
+                    <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-none text-xs flex items-center gap-2">
                       <AlertCircle className="h-4 w-4 shrink-0" />
                       <span>{depositErrorMsg}</span>
                     </div>
@@ -1648,7 +1663,7 @@ export default function App() {
                   <div className="pt-2">
                     <button
                       onClick={executeLiveDeposit}
-                      className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-widest active:translate-y-px transition-all rounded-none flex items-center justify-center gap-2 shadow-[2px_2px_0px_#1e3a8a]"
+                      className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-widest active:translate-y-px transition-all rounded-none flex items-center justify-center gap-2"
                     >
                       <Wallet className="h-3.5 w-3.5" />
                       {walletConnected ? "Live Deposit" : "Connect Wallet & Deposit"}
@@ -1661,9 +1676,9 @@ export default function App() {
               {/* Confirming status */}
               {depositStatus === 'confirming' && (
                 <div className="p-8 text-center space-y-4">
-                  <Loader2 className="h-8 w-8 text-blue-500 animate-spin mx-auto" />
+                  <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto" />
                   <div className="space-y-1">
-                    <h4 className="font-bold uppercase tracking-wider text-xs text-zinc-200">Awaiting Wallet Signature</h4>
+                    <h4 className="font-bold uppercase tracking-wider text-xs text-zinc-800">Awaiting Wallet Signature</h4>
                     <p className="text-xs text-zinc-500 font-mono">Please approve the transfer of {depositAmount} USDC in your browser wallet extension.</p>
                   </div>
                 </div>
@@ -1672,9 +1687,9 @@ export default function App() {
               {/* Processing status */}
               {depositStatus === 'processing' && (
                 <div className="p-8 text-center space-y-4">
-                  <Loader2 className="h-8 w-8 text-blue-500 animate-spin mx-auto" />
+                  <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto" />
                   <div className="space-y-1">
-                    <h4 className="font-bold uppercase tracking-wider text-xs text-zinc-200">Routing Ledger Transfer</h4>
+                    <h4 className="font-bold uppercase tracking-wider text-xs text-zinc-800">Routing Ledger Transfer</h4>
                     <p className="text-xs text-zinc-500 font-mono">Broadcasting transaction hash to {selectedOpp.chain.toUpperCase()} and mining blocks...</p>
                   </div>
                 </div>
@@ -1683,33 +1698,33 @@ export default function App() {
               {/* Success Screen */}
               {depositStatus === 'success' && (
                 <div className="text-center space-y-6 py-4">
-                  <div className="h-12 w-12 bg-zinc-900 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
+                  <div className="h-12 w-12 bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
                     <CheckCircle className="h-6 w-6" />
                   </div>
                   
                   <div className="space-y-2">
-                    <h4 className="text-lg font-black uppercase tracking-tight text-zinc-100">Capital Allocated</h4>
-                    <p className="text-xs text-zinc-400 leading-relaxed px-2 font-sans">
+                    <h4 className="text-lg font-black uppercase tracking-tight text-zinc-900">Capital Allocated</h4>
+                    <p className="text-xs text-zinc-500 leading-relaxed px-2 font-sans">
                       {depositAmount} USDC has been successfully routed. 99.0% was transferred to {selectedOpp.name} and 1.0% was processed as platform broker fee.
                     </p>
                   </div>
 
-                  <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-none space-y-2 text-xs font-mono text-left">
-                    <div className="flex justify-between text-zinc-500">
+                  <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-none space-y-2 text-xs font-mono text-left">
+                    <div className="flex justify-between text-zinc-400">
                       <span className="uppercase font-bold">Settlement Chain</span>
-                      <span className="text-zinc-200 uppercase font-bold">{selectedOpp.chain}</span>
+                      <span className="text-zinc-800 uppercase font-bold">{selectedOpp.chain}</span>
                     </div>
-                    <div className="flex justify-between text-zinc-500">
+                    <div className="flex justify-between text-zinc-400">
                       <span className="uppercase font-bold">Broker Fee Split</span>
-                      <span className="text-blue-500 font-bold">{(Number(depositAmount) * 0.01).toFixed(2)} USDC</span>
+                      <span className="text-blue-600 font-bold">{(Number(depositAmount) * 0.01).toFixed(2)} USDC</span>
                     </div>
-                    <div className="flex flex-col gap-1 border-t border-zinc-800 pt-2 text-[10px]">
-                      <span className="text-zinc-500 uppercase font-bold">Transaction Hash</span>
+                    <div className="flex flex-col gap-1 border-t border-zinc-200 pt-2 text-[10px]">
+                      <span className="text-zinc-400 uppercase font-bold">Transaction Hash</span>
                       <a
                         href={getExplorerUrl(selectedOpp.chain, depositTxHash)}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-blue-500 hover:underline break-all font-mono inline-flex items-center gap-1 mt-0.5"
+                        className="text-blue-600 hover:underline break-all font-mono inline-flex items-center gap-1 mt-0.5"
                       >
                         {depositTxHash}
                         <ExternalLink className="h-3 w-3 shrink-0" />
@@ -1719,7 +1734,7 @@ export default function App() {
 
                   <button
                     onClick={() => setIsDepositModalOpen(false)}
-                    className="w-full py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors rounded-none"
+                    className="w-full py-2.5 bg-zinc-100 border border-zinc-200 text-zinc-700 hover:text-zinc-900 text-xs font-bold uppercase tracking-widest transition-colors rounded-none"
                   >
                     Close Log Panel
                   </button>
@@ -1729,19 +1744,19 @@ export default function App() {
               {/* Error Screen */}
               {depositStatus === 'error' && (
                 <div className="text-center space-y-6 py-4">
-                  <div className="h-12 w-12 bg-red-950/20 border border-red-900 text-red-400 flex items-center justify-center mx-auto">
+                  <div className="h-12 w-12 bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
                     <AlertCircle className="h-6 w-6" />
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="text-lg font-black uppercase tracking-tight text-zinc-100">Routing Failed</h4>
-                    <p className="text-xs text-zinc-400 leading-relaxed font-sans px-4">
+                    <h4 className="text-lg font-black uppercase tracking-tight text-zinc-900">Routing Failed</h4>
+                    <p className="text-xs text-zinc-500 leading-relaxed font-sans px-4">
                       The transaction could not be broadcast or processed correctly on-chain.
                     </p>
                   </div>
 
-                  <div className="bg-red-950/10 border border-red-900 p-4 rounded-none text-left font-mono">
-                    <p className="text-xs text-red-400 leading-relaxed break-all">
+                  <div className="bg-red-50 border border-red-100 p-4 rounded-none text-left font-mono">
+                    <p className="text-xs text-red-600 leading-relaxed break-all">
                       {depositErrorMsg || "Unknown ledger routing error occurred."}
                     </p>
                   </div>
@@ -1749,13 +1764,13 @@ export default function App() {
                   <div className="flex gap-3 text-xs uppercase font-bold tracking-wider">
                     <button
                       onClick={() => setDepositStatus("idle")}
-                      className="flex-1 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white transition-colors rounded-none"
+                      className="flex-1 py-2.5 bg-zinc-100 border border-zinc-200 text-zinc-700 hover:text-zinc-900 transition-colors rounded-none"
                     >
                       Try Again
                     </button>
                     <button
                       onClick={() => setIsDepositModalOpen(false)}
-                      className="flex-1 py-2.5 bg-zinc-950 border border-zinc-900 text-zinc-500 hover:text-zinc-400 transition-colors rounded-none"
+                      className="flex-1 py-2.5 bg-zinc-50 border border-zinc-150 text-zinc-400 hover:text-zinc-600 transition-colors rounded-none"
                     >
                       Cancel
                     </button>
