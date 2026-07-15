@@ -26,15 +26,180 @@ import { motion, AnimatePresence } from "motion/react";
 import { ethers } from "ethers";
 import { Opportunity, Transaction } from "./types";
 
+// Import stunning generated images of platforms and their founders/CEOs
+// @ts-ignore
+import nathanAllmanImg from "./assets/images/nathan_allman_1784118124701.jpg";
+// @ts-ignore
+import staniKulechovImg from "./assets/images/stani_kulechov_1784118136407.jpg";
+// @ts-ignore
+import antonioJulianoImg from "./assets/images/antonio_juliano_1784118147928.jpg";
+// @ts-ignore
+import sreeramKannanImg from "./assets/images/sreeram_kannan_1784118159207.jpg";
+// @ts-ignore
+import sidneyPowellImg from "./assets/images/sidney_powell_1784118172213.jpg";
+
+// @ts-ignore
+import ondoPlatformImg from "./assets/images/ondo_platform_1784118189248.jpg";
+// @ts-ignore
+import aavePlatformImg from "./assets/images/aave_platform_1784118201889.jpg";
+// @ts-ignore
+import dydxPlatformImg from "./assets/images/dydx_platform_1784118212078.jpg";
+// @ts-ignore
+import eigenlayerPlatformImg from "./assets/images/eigenlayer_platform_1784118226022.jpg";
+// @ts-ignore
+import maplePlatformImg from "./assets/images/maple_platform_1784118236753.jpg";
+
 export default function App() {
   // Navigation & View state
   const [isAdminView, setIsAdminView] = useState(false);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "integrations">("dashboard");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [chainFilter, setChainFilter] = useState("all");
   const [riskFilter, setRiskFilter] = useState("all");
   const [marketTypeFilter, setMarketTypeFilter] = useState("all");
+
+  // Integrations category filter and partner lists
+  const [integrationFilter, setIntegrationFilter] = useState<string>("all");
+
+  const integrationsList = [
+    {
+      id: "ondo",
+      name: "Ondo Finance",
+      founderName: "Nathan Allman",
+      founderRole: "Founder & CEO",
+      founderPortrait: nathanAllmanImg,
+      platformImage: ondoPlatformImg,
+      category: "real-world assets",
+      description: "Bridges the gap between traditional credit products and public blockchain networks, tokenizing premium real-world short-term US Treasuries.",
+      stats: { tvl: "$250.0M", apy: "5.2%", chain: "Ethereum" },
+      founderBio: "Nathan launched Ondo in 2021 to provide tokenized cash equivalents. Formerly at Goldman Sachs and Prospect Capital, he has scaled Ondo to become an industry leader.",
+      brandColor: "from-amber-600 to-yellow-500",
+      logoLetter: "O"
+    },
+    {
+      id: "aave",
+      name: "Aave Protocol",
+      founderName: "Stani Kulechov",
+      founderRole: "Founder & CEO",
+      founderPortrait: staniKulechovImg,
+      platformImage: aavePlatformImg,
+      category: "lending & debt",
+      description: "An open-source, non-custodial decentralized liquidity protocol that enables users to easily earn yield on deposits and borrow crypto assets.",
+      stats: { tvl: "$8.0B", apy: "5.1%", chain: "Ethereum" },
+      founderBio: "Stani is one of the foundational creators of decentralized finance, starting ETHLend in 2017, which evolved into Aave, the largest non-custodial lending market.",
+      brandColor: "from-purple-600 to-indigo-500",
+      logoLetter: "A"
+    },
+    {
+      id: "dydx",
+      name: "dYdX Exchange",
+      founderName: "Antonio Juliano",
+      founderRole: "Founder & CEO",
+      founderPortrait: antonioJulianoImg,
+      platformImage: dydxPlatformImg,
+      category: "perpetuals (dex)",
+      description: "A leading developer of professional-grade decentralized perpetual trading systems operating on a custom, high-speed, orderbook-based Layer-1 chain.",
+      stats: { tvl: "$1.0B", apy: "25.0%", chain: "dYdX Chain" },
+      founderBio: "Antonio founded dYdX in 2017 after engineering roles at Coinbase and Uber. He is dedicated to scaling perpetual markets using highly secure decentralized systems.",
+      brandColor: "from-blue-700 to-indigo-800",
+      logoLetter: "Y"
+    },
+    {
+      id: "eigenlayer",
+      name: "EigenLayer",
+      founderName: "Sreeram Kannan",
+      founderRole: "Founder & Professor",
+      founderPortrait: sreeramKannanImg,
+      platformImage: eigenlayerPlatformImg,
+      category: "staking & restaking",
+      description: "A restaking protocol designed on Ethereum that establishes a marketplace for decentralized trust, allowing stakers to validate secondary services.",
+      stats: { tvl: "$15.0B", apy: "12.0%", chain: "Ethereum" },
+      founderBio: "Sreeram leads the UW Blockchain Lab and teaches Electrical & Computer Engineering. He developed EigenLayer to scale shared cryptoeconomic security layers.",
+      brandColor: "from-teal-500 to-cyan-500",
+      logoLetter: "E"
+    },
+    {
+      id: "maple",
+      name: "Maple Finance",
+      founderName: "Sidney Powell",
+      founderRole: "Founder & CEO",
+      founderPortrait: sidneyPowellImg,
+      platformImage: maplePlatformImg,
+      category: "lending & debt",
+      description: "A credit marketplace facilitating on-chain structured lending. Maple connects creditworthy institutional borrowers with pools of active depositors.",
+      stats: { tvl: "$45.0M", apy: "14.0%", chain: "Ethereum" },
+      founderBio: "Sidney is a capital markets leader. Leveraging years of commercial debt structuring, he designed Maple to supply credit structures on public networks.",
+      brandColor: "from-orange-600 to-red-500",
+      logoLetter: "M"
+    },
+    {
+      id: "goldfinch",
+      name: "Goldfinch Credit",
+      founderName: "Mike Sall & Blake West",
+      founderRole: "Co-Founders",
+      category: "lending & debt",
+      description: "A decentralized credit protocol offering underwritten loans to real-world businesses, particularly in emerging markets, without crypto collateral requirements.",
+      stats: { tvl: "$12.0M", apy: "12.5%", chain: "Ethereum" },
+      founderBio: "Mike Sall previously spearheaded product analytics at Medium and Coinbase. He founded Goldfinch to address under-collateralized global debt markets.",
+      brandColor: "from-yellow-600 to-amber-700",
+      logoLetter: "G"
+    },
+    {
+      id: "lido",
+      name: "Lido Staking",
+      founderName: "Konstantin Lomashuk",
+      founderRole: "Co-Founder",
+      category: "staking & restaking",
+      description: "The primary liquid staking solution for Ethereum. Lido lets depositors stake any amount of ETH and receive stETH, a highly liquid utility token.",
+      stats: { tvl: "$25.0B", apy: "3.2%", chain: "Ethereum" },
+      founderBio: "Konstantin is a crypto pioneer who has operated validators since Ethereum's genesis. He launched Lido to promote decentralization and liquid capital.",
+      brandColor: "from-sky-500 to-blue-500",
+      logoLetter: "L"
+    },
+    {
+      id: "etherfi",
+      name: "Ether.Fi",
+      founderName: "Mike Silagadze",
+      founderRole: "Founder & CEO",
+      category: "staking & restaking",
+      description: "A decentralized, non-custodial liquid staking platform where stakers control their own private cryptographic keys, ensuring sovereign custody.",
+      stats: { tvl: "$5.0M", apy: "4.1%", chain: "Ethereum" },
+      founderBio: "Mike is a seasoned tech entrepreneur and the former founder of Top Hat. He designed Ether.Fi to secure stakers' custody rights in modern liquid markets.",
+      brandColor: "from-rose-600 to-pink-500",
+      logoLetter: "F"
+    },
+    {
+      id: "hyperliquid",
+      name: "Hyperliquid",
+      founderName: "Jeff Yan",
+      founderRole: "Founder & Core Dev",
+      category: "perpetuals (dex)",
+      description: "An ultra-fast custom-engineered L1 chain dedicated to high-leverage decentralized perp trading, using sub-second consensus engines.",
+      stats: { tvl: "$2.0M", apy: "40.0%", chain: "Hyperliquid" },
+      founderBio: "Jeff Yan is a systems engineer specialized in high-performance computing. He built Hyperliquid's consensus mechanism from the ground up for low latency.",
+      brandColor: "from-emerald-600 to-teal-500",
+      logoLetter: "H"
+    },
+    {
+      id: "compound",
+      name: "Compound",
+      founderName: "Robert Leshner",
+      founderRole: "Co-Founder",
+      category: "lending & debt",
+      description: "An algorithmic, autonomous interest rate protocol designed for developers to unlock collateral-backed interest-generating applications.",
+      stats: { tvl: "$5.0M", apy: "4.8%", chain: "Ethereum" },
+      founderBio: "Robert is a former financial analyst who founded Compound in 2017. He designed the cToken format, pioneering algorithmic interest calculations.",
+      brandColor: "from-green-600 to-emerald-700",
+      logoLetter: "C"
+    }
+  ];
+
+  const filteredIntegrations = integrationsList.filter((item) => {
+    if (integrationFilter === "all") return true;
+    return item.category === integrationFilter;
+  });
 
   // Wallet State
   const [walletConnected, setWalletConnected] = useState(false);
@@ -563,7 +728,7 @@ export default function App() {
       
       {/* HEADER SECTION */}
       <header className={`flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-6 gap-4 transition-colors ${isInstitutionalMode ? "border-emerald-100" : "border-zinc-200"}`}>
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsAdminView(false)}>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setIsAdminView(false); setActiveTab("dashboard"); }}>
           <div className={`w-10 h-10 flex items-center justify-center rounded-sm font-bold text-xl italic text-white transition-all duration-300 ${
             isInstitutionalMode 
               ? "bg-emerald-600 shadow-[4px_4px_0px_#064e3b]" 
@@ -593,15 +758,34 @@ export default function App() {
         {/* NAVIGATION LINKS */}
         <nav className="flex flex-wrap gap-4 md:gap-8 text-xs font-bold uppercase tracking-widest text-zinc-400">
           <button
-            onClick={() => setIsAdminView(false)}
+            onClick={() => {
+              setIsAdminView(false);
+              setActiveTab("dashboard");
+            }}
             className={`pb-1 transition-all ${
-              !isAdminView 
+              !isAdminView && activeTab === "dashboard"
                 ? (isInstitutionalMode ? "text-emerald-600 border-b-2 border-emerald-600 font-bold" : "text-blue-600 border-b-2 border-blue-600 font-bold") 
                 : "hover:text-zinc-900 font-medium text-zinc-500"
             }`}
           >
             Dashboard
           </button>
+          
+          <button
+            onClick={() => {
+              setIsAdminView(false);
+              setActiveTab("integrations");
+            }}
+            className={`pb-1 transition-all flex items-center gap-1.5 ${
+              !isAdminView && activeTab === "integrations"
+                ? (isInstitutionalMode ? "text-emerald-600 border-b-2 border-emerald-600 font-bold" : "text-blue-600 border-b-2 border-blue-600 font-bold") 
+                : "hover:text-zinc-900 font-medium text-zinc-500"
+            }`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            Integrations & Founders
+          </button>
+
           <button
             onClick={() => {
               setIsAdminView(true);
@@ -678,12 +862,12 @@ export default function App() {
       {/* MAIN CONTENT AREA */}
       <AnimatePresence mode="wait">
         {!isAdminView ? (
-          
-          /* =========================================================================
-             DASHBOARD / OPPORTUNITIES VIEW
-             ========================================================================= */
-          <motion.div
-            key="yields-dashboard"
+          activeTab === "dashboard" ? (
+            /* =========================================================================
+               DASHBOARD / OPPORTUNITIES VIEW
+               ========================================================================= */
+            <motion.div
+              key="yields-dashboard"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1069,6 +1253,176 @@ export default function App() {
 
           </div>
         </motion.div>
+          ) : (
+            /* =========================================================================
+               INTEGRATIONS & FOUNDERS VIEW
+               ========================================================================= */
+            <motion.div
+              key="integrations-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.2 }}
+              className="flex-grow py-8 flex flex-col space-y-8"
+            >
+              {/* Header / Intro Card */}
+              <div className={`border p-8 rounded-none relative overflow-hidden shadow-sm ${
+                isInstitutionalMode ? "bg-emerald-50/40 border-emerald-200" : "bg-zinc-50 border-zinc-200"
+              }`}>
+                <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-zinc-50/25 to-transparent pointer-events-none" />
+                <div className="max-w-3xl space-y-3 relative z-10">
+                  <span className={`text-[10px] font-mono uppercase tracking-widest block font-bold ${
+                    isInstitutionalMode ? "text-emerald-700" : "text-blue-600"
+                  }`}>
+                    YieldFi Integrated Ecosystem
+                  </span>
+                  <h2 className="text-3xl md:text-4xl font-black tracking-tighter uppercase leading-none text-zinc-900 font-sans">
+                    Strategic Partners & Leadership
+                  </h2>
+                  <p className="text-xs text-zinc-500 font-sans leading-relaxed">
+                    YieldFi routes capital allocations exclusively into institutional-grade, fully audited smart contracts engineered by world-class leaders. Discover the platform metrics, custom abstract designs, and active CEOs/founders driving the decentralized financial system.
+                  </p>
+                </div>
+              </div>
+
+              {/* Filter controls */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-5 border-zinc-200">
+                <div className="flex flex-wrap gap-2">
+                  {["All", "Real-World Assets", "Lending & Debt", "Staking & Restaking", "Perpetuals (DEX)"].map((cat) => {
+                    const filterValue = cat === "All" ? "all" : cat.toLowerCase();
+                    const isActive = integrationFilter === filterValue;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setIntegrationFilter(filterValue)}
+                        className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all rounded-none border ${
+                          isActive
+                            ? (isInstitutionalMode ? "bg-emerald-600 border-emerald-600 text-white shadow-sm" : "bg-blue-600 border-blue-600 text-white shadow-sm")
+                            : "bg-white border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-300"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest font-extrabold bg-zinc-50 border border-zinc-200 px-3 py-1.5">
+                  Showing {filteredIntegrations.length} Active Protocols
+                </div>
+              </div>
+
+              {/* Grid layout of integrations */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredIntegrations.map((item) => (
+                  <div 
+                    key={item.id}
+                    className="border border-zinc-200 bg-white shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group relative overflow-hidden"
+                  >
+                    {/* Category Accent top border */}
+                    <div className={`h-1.5 w-full bg-gradient-to-r ${item.brandColor}`} />
+
+                    {/* Platform Image / Banner (Generated) */}
+                    <div className="h-44 relative bg-zinc-950 overflow-hidden border-b border-zinc-100 flex items-center justify-center">
+                      {item.platformImage ? (
+                        <img 
+                          src={item.platformImage} 
+                          alt={`${item.name} platform visual`}
+                          className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        // Creative abstract fallback vector banner
+                        <div className={`w-full h-full bg-gradient-to-br ${item.brandColor} opacity-20 flex items-center justify-center relative`}>
+                          <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] bg-[size:16px_16px]" />
+                          <span className="text-8xl font-black text-black/5 select-none font-sans uppercase">
+                            {item.name}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Logo Label overlay */}
+                      <div className="absolute top-4 left-4 bg-black/75 backdrop-blur-md px-3 py-1 border border-zinc-800 flex items-center gap-2">
+                        <span className={`w-5 h-5 flex items-center justify-center text-[11px] font-black text-white bg-gradient-to-r ${item.brandColor}`}>
+                          {item.logoLetter}
+                        </span>
+                        <span className="text-xs font-black text-zinc-100 uppercase tracking-tight">{item.name}</span>
+                      </div>
+
+                      {/* APY Badge overlay */}
+                      <div className="absolute bottom-4 right-4 bg-emerald-500/90 text-white backdrop-blur-sm px-3 py-1 font-mono text-xs font-black">
+                        {item.stats.apy} APY
+                      </div>
+                    </div>
+
+                    {/* Combined Portrait and Metadata Block */}
+                    <div className="p-6 flex-grow flex flex-col space-y-4">
+                      
+                      {/* Founder Section */}
+                      <div className="flex items-center gap-3.5 border-b border-zinc-100 pb-4">
+                        {item.founderPortrait ? (
+                          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-zinc-200 shadow-sm shrink-0">
+                            <img 
+                              src={item.founderPortrait} 
+                              alt={item.founderName}
+                              className="w-full h-full object-cover scale-105"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        ) : (
+                          // Attractive Initials Avatar
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-white bg-gradient-to-br ${item.brandColor} shrink-0 border-2 border-zinc-200 shadow-sm font-sans text-lg`}>
+                            {item.founderName.split(" ").map(n => n[0]).join("")}
+                          </div>
+                        )}
+
+                        <div className="space-y-0.5">
+                          <h4 className="text-xs font-bold font-mono text-zinc-400 uppercase tracking-widest">
+                            {item.founderRole}
+                          </h4>
+                          <h3 className="text-sm font-black text-zinc-900 font-sans tracking-tight">
+                            {item.founderName}
+                          </h3>
+                          <span className="text-[10px] text-zinc-500 font-medium">
+                            Active Executive Leadership
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="space-y-2 flex-grow">
+                        <p className="text-[11px] text-zinc-400 font-mono uppercase tracking-widest font-extrabold">
+                          Platform Operations
+                        </p>
+                        <p className="text-xs text-zinc-600 leading-relaxed font-sans">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      {/* Founder Bio (Collapsible/Elegant Detail) */}
+                      <div className="bg-zinc-50 border border-zinc-100 p-3 text-[11px] text-zinc-500 leading-relaxed italic font-sans relative">
+                        <div className="absolute top-1 right-2 font-serif text-zinc-300 text-lg select-none">“</div>
+                        {item.founderBio}
+                      </div>
+
+                      {/* Stats strip */}
+                      <div className="grid grid-cols-2 gap-3 pt-2 text-[10px] border-t border-zinc-100 font-mono">
+                        <div>
+                          <span className="text-zinc-400 uppercase block font-bold">Integrated TVL</span>
+                          <span className="text-zinc-800 font-bold block mt-0.5">{item.stats.tvl}</span>
+                        </div>
+                        <div>
+                          <span className="text-zinc-400 uppercase block font-bold">Primary Chain</span>
+                          <span className="text-zinc-800 font-bold block mt-0.5">{item.stats.chain}</span>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )
         ) : (
           
           /* =========================================================================
