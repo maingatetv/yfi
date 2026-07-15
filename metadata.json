@@ -1,6 +1,6 @@
 {
   "name": "YieldFi",
-  "description": "YieldFi is a high-fidelity global DeFi and RWA yield aggregator that enables 1-click capital deployment into top-tier yields on Base, Polygon, and Ethereum.",
+  "description": "YieldFi is a high-fidelity global DeFi and RWA aggregator featuring automated routing, API programmatic bot access, smart contract badges with 1% cashback, and a real-time Risk & Yield dashboard.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
