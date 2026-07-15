@@ -48,6 +48,8 @@ import dydxPlatformImg from "./assets/images/dydx_platform_1784118212078.jpg";
 import eigenlayerPlatformImg from "./assets/images/eigenlayer_platform_1784118226022.jpg";
 // @ts-ignore
 import maplePlatformImg from "./assets/images/maple_platform_1784118236753.jpg";
+// @ts-ignore
+import yieldfiLogoImg from "./assets/images/yieldfi_logo_1784118735803.jpg";
 
 export default function App() {
   // Navigation & View state
@@ -728,13 +730,18 @@ export default function App() {
       
       {/* HEADER SECTION */}
       <header className={`flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-6 gap-4 transition-colors ${isInstitutionalMode ? "border-emerald-100" : "border-zinc-200"}`}>
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setIsAdminView(false); setActiveTab("dashboard"); }}>
-          <div className={`w-10 h-10 flex items-center justify-center rounded-sm font-bold text-xl italic text-white transition-all duration-300 ${
+        <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => { setIsAdminView(false); setActiveTab("dashboard"); }}>
+          <div className={`w-12 h-12 flex items-center justify-center rounded-sm overflow-hidden border transition-all duration-300 ${
             isInstitutionalMode 
-              ? "bg-emerald-600 shadow-[4px_4px_0px_#064e3b]" 
-              : "bg-blue-600 shadow-[4px_4px_0px_#1e3a8a]"
+              ? "border-emerald-500/20 shadow-[4px_4px_0px_#064e3b]" 
+              : "border-blue-500/20 shadow-[4px_4px_0px_#1e3a8a]"
           }`}>
-            YF
+            <img 
+              src={yieldfiLogoImg} 
+              alt="YieldFi Logo" 
+              className="w-full h-full object-cover scale-105"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -746,11 +753,11 @@ export default function App() {
                   ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                   : "bg-blue-50 border-blue-200 text-blue-700"
               }`}>
-                1.0% Flat Fee. $7.5T Daily Volume
+                {platformFeePercent.toFixed(1)}% Flat Fee. $7.5T Daily Volume
               </span>
             </div>
-            <p className={`text-[10px] font-mono tracking-widest uppercase mt-1 transition-colors ${isInstitutionalMode ? "text-emerald-600" : "text-blue-600"}`}>
-              YieldFi | 1.0% Flat Fee on All Actions
+            <p className={`text-[9px] font-mono tracking-widest uppercase mt-1 transition-colors font-bold ${isInstitutionalMode ? "text-emerald-600" : "text-blue-600"}`}>
+              Precision Liquidity Routing • Institutional Yield
             </p>
           </div>
         </div>
@@ -1266,11 +1273,11 @@ export default function App() {
               className="flex-grow py-8 flex flex-col space-y-8"
             >
               {/* Header / Intro Card */}
-              <div className={`border p-8 rounded-none relative overflow-hidden shadow-sm ${
+              <div className={`border p-8 rounded-none relative overflow-hidden shadow-sm flex flex-col md:flex-row gap-6 items-center justify-between ${
                 isInstitutionalMode ? "bg-emerald-50/40 border-emerald-200" : "bg-zinc-50 border-zinc-200"
               }`}>
                 <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-zinc-50/25 to-transparent pointer-events-none" />
-                <div className="max-w-3xl space-y-3 relative z-10">
+                <div className="max-w-2xl space-y-3 relative z-10">
                   <span className={`text-[10px] font-mono uppercase tracking-widest block font-bold ${
                     isInstitutionalMode ? "text-emerald-700" : "text-blue-600"
                   }`}>
@@ -1282,6 +1289,24 @@ export default function App() {
                   <p className="text-xs text-zinc-500 font-sans leading-relaxed">
                     YieldFi routes capital allocations exclusively into institutional-grade, fully audited smart contracts engineered by world-class leaders. Discover the platform metrics, custom abstract designs, and active CEOs/founders driving the decentralized financial system.
                   </p>
+                </div>
+
+                {/* Newly Generated Special YieldFi Logo & Slogan */}
+                <div className="shrink-0 flex flex-col items-center p-4 bg-white border border-zinc-200 shadow-sm rounded-none w-48 relative z-10">
+                  <div className="w-20 h-20 overflow-hidden border border-zinc-100 flex items-center justify-center mb-3">
+                    <img 
+                      src={yieldfiLogoImg} 
+                      alt="YieldFi Special Logo" 
+                      className="w-full h-full object-cover scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-widest text-zinc-800 font-sans">
+                    YieldFi
+                  </span>
+                  <span className="text-[7.5px] font-mono font-bold uppercase tracking-wider text-zinc-400 mt-1 text-center leading-normal">
+                    Precision Liquidity Routing • Institutional Yield
+                  </span>
                 </div>
               </div>
 
