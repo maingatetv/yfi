@@ -10,6 +10,16 @@ import { fetchAaveUSDC, fetchOndoFinance, fetchGoldfinch } from "./src/lib/fetch
 // Load env vars
 dotenv.config();
 
+// Reusable helper to dynamically fetch and parse platform fee percentage
+const getFeePercent = (): number => {
+  const envVal = process.env.PLATFORM_FEE_PERCENT;
+  if (envVal !== undefined) {
+    const val = parseFloat(envVal);
+    if (!isNaN(val)) return val;
+  }
+  return 1.0; // default 1% flat fee
+};
+
 const app = express();
 const PORT = 3000;
 
@@ -575,9 +585,10 @@ app.get("/api/yields", async (req, res) => {
     res.setHeader("Cache-Control", "public, max-age=60");
 
     const db = await readDb();
-    const reqHost = req.headers.host || "upfrica.africa";
+    const reqHost = req.headers.host || "yieldfi-558c.onrender.com";
     const protocolStr = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
-    const execEndpoint = `https://upfrica.africa/api/execute`;
+    const execEndpoint = `${protocolStr}://${reqHost}/api/execute`;
+    const feePct = getFeePercent();
 
     // Process yields list
     const allOpps = db.opportunities.map((opp: any) => ({
@@ -594,7 +605,7 @@ app.get("/api/yields", async (req, res) => {
       deposit_contract: opp.contract_address || opp.protocol_wallet,
       min_deposit_usd: opp.min_deposit || 1,
       max_deposit_usd: opp.max_deposit || 1000000000,
-      fee_percent: 1.0,
+      fee_percent: feePct,
       execution_endpoint: execEndpoint,
       updated_at: opp.last_updated || new Date().toISOString(),
       last_updated: opp.last_updated || new Date().toISOString(),
@@ -654,12 +665,12 @@ app.get("/api/yields", async (req, res) => {
         min_deposit_usd: item.min_deposit_usd || 1,
         min_deposit: item.min_deposit_usd || 1,
         max_deposit_usd: 1000000000,
-        execution_endpoint: item.execution_endpoint,
+        execution_endpoint: item.execution_endpoint.replace("https://upfrica.africa", `${protocolStr}://${reqHost}`),
         deposit_url: `https://${item.protocol.toLowerCase().split('-')[0]}.finance`,
         contract_address: "0x" + (idx + 1).toString().padStart(40, "0"),
         protocol_wallet: "0x" + (idx + 1).toString().padStart(40, "0"),
         deposit_contract: "0x" + (idx + 1).toString().padStart(40, "0"),
-        fee_percent: 1.0,
+        fee_percent: feePct,
         updated_at: new Date().toISOString(),
         last_updated: new Date().toISOString(),
         audit_link: `https://${item.protocol.toLowerCase().split('-')[0]}.finance/audit.pdf`,
@@ -818,7 +829,7 @@ app.get("/api/config", (req, res) => {
   const feeWallet = process.env.PLATFORM_FEE_WALLET || "0xFEE0000000000000000000000000000000000000";
   res.json({
     platformFeeWallet: feeWallet,
-    platform_fee_percent: 1.0,
+    platform_fee_percent: getFeePercent(),
     last_updated: new Date().toISOString()
   });
 });
@@ -872,8 +883,10 @@ app.post("/api/execute", async (req, res) => {
     return res.status(400).json({ error: "Invalid amount. Must be greater than zero.", last_updated: new Date().toISOString() });
   }
 
-  const fee = amountNum * 0.01;
-  const routed_amount = amountNum * 0.99;
+  const feePct = getFeePercent();
+  const feeFrac = feePct / 100;
+  const fee = amountNum * feeFrac;
+  const routed_amount = amountNum * (1 - feeFrac);
 
   console.log(`Fee collected: ${fee}`);
 
@@ -1017,7 +1030,9 @@ app.post("/api/rwa-execute", async (req, res) => {
     return res.status(400).json({ error: "Invalid amount. Must be greater than zero.", last_updated: new Date().toISOString() });
   }
 
-  const fee_taken_usd = amountNum * 0.01; // 1% fee
+  const feePct = getFeePercent();
+  const feeFrac = feePct / 100;
+  const fee_taken_usd = amountNum * feeFrac; // dynamic fee
   const remaining_amount = amountNum - fee_taken_usd;
   const share_price = 50;
   const shares_bought = Math.floor(remaining_amount / share_price);
@@ -1070,7 +1085,9 @@ app.post("/api/insurance-vault", async (req, res) => {
     return res.status(400).json({ error: "Invalid amount. Must be greater than zero.", last_updated: new Date().toISOString() });
   }
 
-  const fee = amountNum * 0.01; // 1% fee
+  const feePct = getFeePercent();
+  const feeFrac = feePct / 100;
+  const fee = amountNum * feeFrac; // dynamic fee
   const to_tbill = amountNum * 0.90; // 90% to Ondo TBILL
   const to_reserve = amountNum * 0.10; // 10% to liquid reserve
 
@@ -1182,7 +1199,9 @@ app.post("/api/fx-execute", async (req, res) => {
     return res.status(400).json({ error: "Invalid amount. Must be greater than zero.", last_updated: new Date().toISOString() });
   }
 
-  const fee_taken_usd = amountNum * 0.01; // 1% fee
+  const feePct = getFeePercent();
+  const feeFrac = feePct / 100;
+  const fee_taken_usd = amountNum * feeFrac; // dynamic fee
   const profit_usd = amountNum * 0.0084; // 84 bps corresponding to the target example (420 profit for 50000 amount)
 
   console.log(`FX Fee collected: ${fee_taken_usd}`);
@@ -1265,7 +1284,9 @@ app.post("/api/credit-execute", async (req, res) => {
     return res.status(400).json({ error: "Invalid amount. Must be greater than zero.", last_updated: new Date().toISOString() });
   }
 
-  const fee = amountNum * 0.01; // 1% fee
+  const feePct = getFeePercent();
+  const feeFrac = feePct / 100;
+  const fee = amountNum * feeFrac; // dynamic fee
   const spread_profit = amountNum * 0.055; // 5.5% profit on top spread (Maple)
   const borrowed_usd = amountNum;
   const lent_usd = amountNum;
@@ -1354,8 +1375,10 @@ app.post("/api/execute/batch", async (req, res) => {
         continue;
       }
 
-      const fee_collected = amountNum * 0.01;
-      const routed_amount = amountNum * 0.99;
+      const feePct = getFeePercent();
+      const feeFrac = feePct / 100;
+      const fee_collected = amountNum * feeFrac;
+      const routed_amount = amountNum * (1 - feeFrac);
       const txHash = "0x" + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join("");
 
       const newTx = {
@@ -1409,7 +1432,7 @@ app.get("/api/security", (req, res) => {
     success: true,
     platform: "YieldFi Router Suite",
     fee_wallet: process.env.PLATFORM_FEE_WALLET || "0xFEE0000000000000000000000000000000000000",
-    fee_percent: 1.0,
+    fee_percent: getFeePercent(),
     audited: false,
     multisig: "Coming Q3",
     timelock_hours: 24,
@@ -1427,16 +1450,18 @@ app.get("/api/fee-wallet", async (req, res) => {
   try {
     const db = await readDb();
     const totalFees = db.transactions.reduce((sum: number, tx: any) => sum + Number(tx.fee_collected || 0), 0);
+    const feePct = getFeePercent();
     res.json({
       total_fees_collected_usd: totalFees,
       fee_wallet: "0x0",
-      fee_percent: 1.0
+      fee_percent: feePct
     });
   } catch (err) {
+    const feePct = getFeePercent();
     res.json({
       total_fees_collected_usd: 0,
       fee_wallet: "0x0",
-      fee_percent: 1.0
+      fee_percent: feePct
     });
   }
 });
@@ -1607,6 +1632,10 @@ All inputs and responses default to application/json format.
 
 // Interactive API docs with cyberpunk aesthetic
 app.get("/docs", (req, res) => {
+  const reqHost = req.headers.host || "yieldfi-558c.onrender.com";
+  const protocolStr = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+  const baseUrl = `${protocolStr}://${reqHost}`;
+
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -1701,7 +1730,7 @@ app.get("/docs", (req, res) => {
             <p class="text-zinc-400 text-sm">Fetches all yields with 60-second CDN caching. Outputs standard format + DefiLlama compatible format under the <code class="text-lime-400 code">data</code> key.</p>
             <div class="bg-zinc-950 p-4 border border-zinc-900 rounded-sm">
               <span class="text-xs text-zinc-500 font-bold uppercase code">Shell Curl Example</span>
-              <pre class="text-xs text-lime-400 code mt-2 overflow-x-auto bg-zinc-950 p-2">curl -X GET "https://upfrica.africa/api/yields?page=1&limit=5"</pre>
+              <pre class="text-xs text-lime-400 code mt-2 overflow-x-auto bg-zinc-950 p-2">curl -X GET "${baseUrl}/api/yields?page=1&limit=5"</pre>
             </div>
           </section>
 
@@ -1713,7 +1742,7 @@ app.get("/docs", (req, res) => {
             <p class="text-zinc-400 text-sm">Initiates real-time money routing: 99% gets channeled directly to target pool contract wallet; 1% gets automatically routed to YieldFi Platform fee treasury.</p>
             <div class="bg-zinc-950 p-4 border border-zinc-900 rounded-sm">
               <span class="text-xs text-zinc-500 font-bold uppercase code">Shell Curl Example</span>
-              <pre class="text-xs text-lime-400 code mt-2 overflow-x-auto bg-zinc-950 p-2">curl -X POST "https://upfrica.africa/api/execute" \\
+              <pre class="text-xs text-lime-400 code mt-2 overflow-x-auto bg-zinc-950 p-2">curl -X POST "${baseUrl}/api/execute" \\
   -H "Content-Type: application/json" \\
   -d '{
     "bot_id": "quant-vault-01",
@@ -1733,7 +1762,7 @@ app.get("/docs", (req, res) => {
             <p class="text-zinc-400 text-sm">Processes up to 100 liquidity allocations in a single, high-efficiency call.</p>
             <div class="bg-zinc-950 p-4 border border-zinc-900 rounded-sm">
               <span class="text-xs text-zinc-500 font-bold uppercase code">Shell Curl Example</span>
-              <pre class="text-xs text-lime-400 code mt-2 overflow-x-auto bg-zinc-950 p-2">curl -X POST "https://upfrica.africa/api/execute/batch" \\
+              <pre class="text-xs text-lime-400 code mt-2 overflow-x-auto bg-zinc-950 p-2">curl -X POST "${baseUrl}/api/execute/batch" \\
   -H "Content-Type: application/json" \\
   -d '{
     "deposits": [

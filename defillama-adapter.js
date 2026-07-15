@@ -10,7 +10,7 @@ const sdk = require('@defillama/sdk');
 const axios = require('axios');
 
 // Replace this with your production hosted domain when live
-const YIELDFI_API_URL = 'https://yieldfi.africa/api/opportunities'; 
+const YIELDFI_API_URL = 'https://yieldfi-558c.onrender.com/api/opportunities'; 
 
 async function fetchChainTvl(chainName) {
   // Fetch active pools directly from the YieldFi registry API

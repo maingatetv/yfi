@@ -52,6 +52,7 @@ export default function App() {
   const [depositTxHash, setDepositTxHash] = useState("");
   const [depositErrorMsg, setDepositErrorMsg] = useState("");
   const [platformFeeWallet, setPlatformFeeWallet] = useState("0xFEE0000000000000000000000000000000000000");
+  const [platformFeePercent, setPlatformFeePercent] = useState<number>(1.0);
 
   // Admin Credentials State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -142,6 +143,9 @@ export default function App() {
       const data = await res.json();
       if (data.platformFeeWallet) {
         setPlatformFeeWallet(data.platformFeeWallet);
+      }
+      if (data.platform_fee_percent !== undefined) {
+        setPlatformFeePercent(data.platform_fee_percent);
       }
     } catch (error) {
       console.error("Failed to fetch platform config:", error);
@@ -423,8 +427,8 @@ export default function App() {
     setDepositStatus("confirming");
     setDepositErrorMsg("");
 
-    const fee_collected = amountNum * 0.01; // 1.0% fee
-    const send_to_protocol = amountNum * 0.99; // 99.0% to pool
+    const fee_collected = amountNum * (platformFeePercent / 100);
+    const send_to_protocol = amountNum - fee_collected;
 
     // --- REAL WEB3 INTEGRATION ---
     try {
@@ -730,7 +734,7 @@ export default function App() {
                   Earn 5% - 20% APY on Real Assets.
                 </h2>
                 <p className="text-zinc-500 text-sm max-w-xl font-sans">
-                  Real-world asset (RWA) vaults and institutional DeFi lending protocols with 1-click execution. All transactions incur a transparent 1.0% protocol fee.
+                  Real-world asset (RWA) vaults and institutional DeFi lending protocols with 1-click execution. All transactions incur a transparent {platformFeePercent.toFixed(1)}% protocol fee.
                 </p>
               </div>
 
@@ -1533,7 +1537,7 @@ export default function App() {
             Legal Disclaimer
           </p>
           <p className="text-[9px] text-zinc-500 max-w-2xl leading-tight font-sans">
-            The yields displayed are for informational purposes only. Smart contracts carry inherent risks including total loss of funds. This is not financial advice. YieldFi takes a 1.0% flat fee on deployments to maintain platform infrastructure and cross-chain bridging.
+            The yields displayed are for informational purposes only. Smart contracts carry inherent risks including total loss of funds. This is not financial advice. YieldFi takes a {platformFeePercent.toFixed(1)}% flat fee on deployments to maintain platform infrastructure and cross-chain bridging.
           </p>
         </div>
         <div className="text-left md:text-right shrink-0">
@@ -1639,12 +1643,12 @@ export default function App() {
                   {/* Fee logic breakdown */}
                   <div className="bg-zinc-50 p-4 border border-zinc-200 space-y-1.5 font-mono text-[11px] text-zinc-600">
                     <div className="flex justify-between">
-                      <span className="font-bold text-zinc-400 uppercase">99.0% to Yield Pool</span>
-                      <span className="font-bold text-zinc-700">{(Number(depositAmount) * 0.99 || 0).toFixed(2)} USDC</span>
+                      <span className="font-bold text-zinc-400 uppercase">{(100 - platformFeePercent).toFixed(1)}% to Yield Pool</span>
+                      <span className="font-bold text-zinc-700">{(Number(depositAmount) * (1 - platformFeePercent / 100) || 0).toFixed(2)} USDC</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="font-bold text-zinc-400 uppercase">1.0% Flat Service Fee</span>
-                      <span className="text-blue-600 font-bold">{(Number(depositAmount) * 0.01 || 0).toFixed(2)} USDC</span>
+                      <span className="font-bold text-zinc-400 uppercase">{platformFeePercent.toFixed(1)}% Flat Service Fee</span>
+                      <span className="text-blue-600 font-bold">{(Number(depositAmount) * (platformFeePercent / 100) || 0).toFixed(2)} USDC</span>
                     </div>
                     <div className="border-t border-zinc-200 pt-2 flex justify-between font-bold text-zinc-800">
                       <span className="uppercase text-zinc-500 font-bold">Total Routed</span>
@@ -1705,7 +1709,7 @@ export default function App() {
                   <div className="space-y-2">
                     <h4 className="text-lg font-black uppercase tracking-tight text-zinc-900">Capital Allocated</h4>
                     <p className="text-xs text-zinc-500 leading-relaxed px-2 font-sans">
-                      {depositAmount} USDC has been successfully routed. 99.0% was transferred to {selectedOpp.name} and 1.0% was processed as platform broker fee.
+                      {depositAmount} USDC has been successfully routed. {(100 - platformFeePercent).toFixed(1)}% was transferred to {selectedOpp.name} and {platformFeePercent.toFixed(1)}% was processed as platform broker fee.
                     </p>
                   </div>
 
@@ -1716,7 +1720,7 @@ export default function App() {
                     </div>
                     <div className="flex justify-between text-zinc-400">
                       <span className="uppercase font-bold">Broker Fee Split</span>
-                      <span className="text-blue-600 font-bold">{(Number(depositAmount) * 0.01).toFixed(2)} USDC</span>
+                      <span className="text-blue-600 font-bold">{(Number(depositAmount) * (platformFeePercent / 100)).toFixed(2)} USDC</span>
                     </div>
                     <div className="flex flex-col gap-1 border-t border-zinc-200 pt-2 text-[10px]">
                       <span className="text-zinc-400 uppercase font-bold">Transaction Hash</span>

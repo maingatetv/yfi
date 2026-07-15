@@ -9,7 +9,7 @@
 const axios = require('axios');
 
 // Replace this with your production hosted domain when live
-const YIELDFI_API_URL = 'https://yieldfi.africa/api/opportunities';
+const YIELDFI_API_URL = 'https://yieldfi-558c.onrender.com/api/opportunities';
 
 async function apy() {
   const response = await axios.get(YIELDFI_API_URL);
@@ -54,5 +54,5 @@ async function apy() {
 module.exports = {
   timetravel: false,
   apy: apy,
-  url: 'https://yieldfi.africa' // Main website URL
+  url: 'https://yieldfi-558c.onrender.com' // Main website URL
 };
