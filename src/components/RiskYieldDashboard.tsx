@@ -91,7 +91,7 @@ export default function RiskYieldDashboard() {
 
   // Admin adjustable states
   const [isPaused, setIsPaused] = useState(false);
-  const [routingFeeBps, setRoutingFeeBps] = useState(30); // 0.3%
+  const [routingFeeBps, setRoutingFeeBps] = useState(100); // 1.0%
   const [feeSaveSuccess, setFeeSaveSuccess] = useState(false);
 
   // Smart Contract Interaction sandbox states (Executing Simulated Swap)
@@ -130,7 +130,13 @@ export default function RiskYieldDashboard() {
       // 1. Fetch active yield opportunities from our real server API
       const yieldsRes = await fetch("/api/yields");
       const yields = await yieldsRes.json();
-      setYieldsData(Array.isArray(yields) ? yields : []);
+      setYieldsData(
+        Array.isArray(yields)
+          ? yields
+          : yields && Array.isArray(yields.opportunities)
+          ? yields.opportunities
+          : []
+      );
 
       // 2. Fetch bot stats and cashback ledger from our real server API
       const botsRes = await fetch("/api/bot-badges");

@@ -1,6 +1,6 @@
 {
   "name": "YieldFi",
-  "description": "YieldFi is a high-fidelity global DeFi and RWA aggregator featuring automated routing, API programmatic bot access, smart contract badges with 1% cashback, and a real-time Risk & Yield dashboard.",
+  "description": "YieldFi is a high-fidelity global DeFi and RWA aggregator featuring automated routing, API programmatic bot access, smart contract badges, status levels, and a real-time Risk & Yield dashboard.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -21,7 +21,7 @@ const getFeePercent = (): number => {
     const val = parseFloat(envVal);
     if (!isNaN(val)) return val;
   }
-  return 1.0; // default 1% flat fee
+  return 0.3; // default 0.3% flat fee
 };
 
 const app = express();
@@ -681,157 +681,170 @@ async function triggerWebhooks(eventType: string, payload: any) {
   }
 }
 
+interface CacheEntry {
+  data: any;
+  expiresAt: number;
+  lastUpdated: string;
+}
+
+const CACHE_EXP_MS = 300 * 1000; // 5 minutes in milliseconds
+
+let tvlCache: CacheEntry | null = null;
+let yieldsCache: CacheEntry | null = null;
+
+const RWA_PROJECTS = new Set([
+  "ondo-finance", "ondo", "maple", "centrifuge", "goldfinch", "clearpool", 
+  "backed", "openeden", "mountain-protocol", "hashnote", "superstate", 
+  "backed-assets", "matrixport", "tangible", "realt", "plume", "atlendis", 
+  "credix", "trufi", "clearpool-rwa", "backed-finance", "etherfuse", 
+  "huma-finance", "polytrade", "stg-rwa", "fujida"
+]);
+
 // 1. GET Yields (CORS-enabled, with all required fields for bots, pagination, CDN caching and DefiLlama alignment)
 app.get("/api/yields", async (req, res) => {
   try {
     // Add CDN Caching headers (60 seconds)
     res.setHeader("Cache-Control", "public, max-age=60");
 
-    const db = await readDb();
-    const reqHost = req.headers.host || "yieldfi-558c.onrender.com";
-    const protocolStr = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
-    const execEndpoint = `${protocolStr}://${reqHost}/api/execute`;
-    const feePct = getFeePercent();
+    const now = Date.now();
+    if (yieldsCache && now < yieldsCache.expiresAt) {
+      return res.json(yieldsCache.data);
+    }
 
-    // Process yields list
-    const allOpps = db.opportunities.map((opp: any) => ({
-      id: opp.id,
-      name: opp.name,
-      apy: opp.apy,
-      tvl_usd: opp.tvl_usd,
-      tvl: opp.tvl_usd, // duplicated for bot friendliness
-      chain: opp.chain,
-      risk: opp.risk,
-      deposit_url: opp.deposit_url,
-      contract_address: opp.contract_address,
-      protocol_wallet: opp.protocol_wallet,
-      deposit_contract: opp.contract_address || opp.protocol_wallet,
-      min_deposit_usd: opp.min_deposit || 1,
-      max_deposit_usd: opp.max_deposit || 1000000000,
-      fee_percent: feePct,
-      execution_endpoint: execEndpoint,
-      updated_at: opp.last_updated || new Date().toISOString(),
-      last_updated: opp.last_updated || new Date().toISOString(),
-      audit_link: opp.audit_link || `https://${opp.id.split('-')[0]}.finance/audit.pdf`,
-      category: opp.category || "RWA",
-      market_type: opp.market_type || (opp.category === "LST" ? "LST" : "RWA"),
-      asset: opp.asset || "USDC"
-    }));
-
-    // Add 13 objects total (original 6 plus 7 new ones)
-    const newYieldsRaw = [
-      {"protocol":"Ondo","market_type":"RWA","chain":"Ethereum","apy":5.2,"tvl":250000000,"risk_score":3,"min_deposit_usd":1,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Goldfinch","market_type":"RWA","chain":"Ethereum","apy":8.1,"tvl":180000,"risk_score":4,"min_deposit_usd":1000,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Maple","market_type":"RWA","chain":"Ethereum","apy":7.5,"tvl":300000,"risk_score":4,"min_deposit_usd":5000,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Lido","market_type":"LST","chain":"Ethereum","apy":3.2,"tvl":25000000,"risk_score":2,"min_deposit_usd":1,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"EtherFi","market_type":"LST","chain":"Ethereum","apy":4.1,"tvl":5000000,"risk_score":3,"min_deposit_usd":1,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"EigenLayer","market_type":"LST","chain":"Ethereum","apy":12.0,"tvl":15000000,"risk_score":5,"min_deposit_usd":1,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Hyperliquid","market_type":"PERP","chain":"Hyperliquid","apy":40.0,"tvl":2000000,"risk_score":9,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"dYdX","market_type":"PERP","chain":"dYdX","apy":25.0,"tvl":1000000000,"risk_score":8,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"GMX","market_type":"PERP","chain":"Arbitrum","apy":18.0,"tvl":600000,"risk_score":7,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Aave-USDC","market_type":"STABLE","chain":"Ethereum","apy":5.1,"tvl":8000000000,"risk_score":2,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Compound-USDT","market_type":"STABLE","chain":"Ethereum","apy":4.8,"tvl":5000000,"risk_score":2,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Backed-bIB01","market_type":"TBILL","chain":"Ethereum","apy":5.0,"tvl":400000,"risk_score":1,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Ondo-USDY","market_type":"TBILL","chain":"Ethereum","apy":5.3,"tvl":500000,"risk_score":1,"execution_endpoint":"https://upfrica.africa/api/execute"},
-      {"protocol":"Binance-USDT/USDC/EURC","market_type":"FX","chain":"Hyperliquid","apy":4.2,"tvl":50000000,"risk_score":1,"min_deposit_usd":100, "execution_endpoint":"https://upfrica.africa/api/fx-execute"},
-      {"protocol":"RealT-DET123","market_type":"REAL ESTATE","chain":"Polygon","apy":9.5,"tvl":2000000,"risk_score":3,"min_deposit_usd":50,"execution_endpoint":"https://upfrica.africa/api/rwa-execute"},
-      {"protocol":"Lofty-CHI456","market_type":"REAL ESTATE","chain":"Base","apy":10.2,"tvl":3500000,"risk_score":4,"min_deposit_usd":50,"execution_endpoint":"https://upfrica.africa/api/rwa-execute"},
-      {"protocol":"Paxos-PAXG","market_type":"COMMODITIES","chain":"Arbitrum","apy":6.4,"tvl":15000000,"risk_score":1,"min_deposit_usd":100,"execution_endpoint":"https://upfrica.africa/api/commodities-execute"},
-      {"protocol":"Tether-XAUT","market_type":"COMMODITIES","chain":"Arbitrum","apy":5.8,"tvl":4500000,"risk_score":1,"min_deposit_usd":100,"execution_endpoint":"https://upfrica.africa/api/commodities-execute"},
-      {"protocol":"Maple-Credit","market_type":"CREDIT","chain":"Ethereum","apy":14.0,"tvl":45000000,"risk_score":4,"min_deposit_usd":5000,"execution_endpoint":"https://upfrica.africa/api/credit-execute"},
-      {"protocol":"Goldfinch-Credit","market_type":"CREDIT","chain":"Ethereum","apy":12.5,"tvl":12000000,"risk_score":4,"min_deposit_usd":1000,"execution_endpoint":"https://upfrica.africa/api/credit-execute"},
-      {"protocol":"Aave-Credit","market_type":"CREDIT","chain":"Ethereum","apy":8.4,"tvl":25000000,"risk_score":2,"min_deposit_usd":100,"execution_endpoint":"https://upfrica.africa/api/credit-execute"}
-    ];
-
-    const mappedNewYields = newYieldsRaw.map((item, idx) => {
-      const riskStr = item.risk_score >= 5 ? "high" : item.risk_score >= 3 ? "medium" : "low";
-      let assetStr = "USDC";
-      if (["Lido", "EtherFi", "EigenLayer"].includes(item.protocol)) {
-        assetStr = "ETH";
-      } else if (item.protocol.includes("-")) {
-        assetStr = item.protocol.split("-")[1];
-      } else if (item.protocol === "GMX") {
-        assetStr = "GLP";
+    try {
+      const response = await fetch("https://yields.llama.fi/pools");
+      if (!response.ok) {
+        throw new Error(`HTTP Error ${response.status}`);
       }
-      return {
-        id: `new-${item.market_type.toLowerCase()}-${item.protocol.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-        name: `${item.protocol} ${item.market_type} Pool`,
-        protocol: item.protocol,
-        market_type: item.market_type,
-        category: item.market_type, // RWA or LST or PERP or STABLE or TBILL
-        chain: item.chain,
-        apy: item.apy,
-        tvl_usd: item.tvl,
-        tvl: item.tvl,
-        risk_score: item.risk_score,
-        risk: riskStr,
-        min_deposit_usd: item.min_deposit_usd || 1,
-        min_deposit: item.min_deposit_usd || 1,
-        max_deposit_usd: 1000000000,
-        execution_endpoint: item.execution_endpoint.replace("https://upfrica.africa", `${protocolStr}://${reqHost}`),
-        deposit_url: `https://${item.protocol.toLowerCase().split('-')[0]}.finance`,
-        contract_address: "0x" + (idx + 1).toString().padStart(40, "0"),
-        protocol_wallet: "0x" + (idx + 1).toString().padStart(40, "0"),
-        deposit_contract: "0x" + (idx + 1).toString().padStart(40, "0"),
-        fee_percent: feePct,
-        updated_at: new Date().toISOString(),
+      const rawData = await response.json();
+      if (!rawData || !Array.isArray(rawData.data)) {
+        throw new Error("Invalid format from DefiLlama yields");
+      }
+
+      const poolsData = rawData.data;
+      const rwaPools = [];
+
+      for (const pool of poolsData) {
+        const project = pool.project || "";
+        const category = pool.category || "";
+
+        let isRwa = false;
+        if (category.toLowerCase() === "rwa") {
+          isRwa = true;
+        } else if (RWA_PROJECTS.has(project.toLowerCase())) {
+          isRwa = true;
+        }
+
+        if (isRwa) {
+          rwaPools.push({
+            pool: pool.pool,
+            project: pool.project,
+            chain: pool.chain,
+            tvlUsd: pool.tvlUsd,
+            apy: pool.apy,
+            symbol: pool.symbol
+          });
+        }
+      }
+
+      // Sort by tvlUsd descending and get top 20
+      rwaPools.sort((a, b) => (b.tvlUsd || 0) - (a.tvlUsd || 0));
+      const top20 = rwaPools.slice(0, 20);
+
+      const mappedOpps = top20.map((pool, idx) => {
+        const riskStr = pool.apy >= 15 ? "high" : pool.apy >= 8 ? "medium" : "low";
+        return {
+          id: pool.pool,
+          name: `${pool.project.toUpperCase()} ${pool.symbol} Pool`,
+          protocol: pool.project,
+          market_type: "RWA",
+          category: "RWA",
+          chain: pool.chain,
+          apy: pool.apy,
+          tvl_usd: pool.tvlUsd,
+          tvl: pool.tvlUsd,
+          risk: riskStr,
+          min_deposit_usd: 100,
+          max_deposit_usd: 10000000,
+          execution_endpoint: `/api/execute`,
+          deposit_url: `https://llama.fi`,
+          contract_address: "0x" + pool.pool.replace(/[^a-fA-F0-9]/g, "").padEnd(40, "0").substring(0, 40),
+          protocol_wallet: "0x" + pool.pool.replace(/[^a-fA-F0-9]/g, "").padEnd(40, "0").substring(0, 40),
+          deposit_contract: "0x" + pool.pool.replace(/[^a-fA-F0-9]/g, "").padEnd(40, "0").substring(0, 40),
+          fee_percent: 1,
+          updated_at: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+          audit_link: "https://llama.fi",
+          asset: pool.symbol
+        };
+      });
+
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 100);
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+
+      const paginatedOpps = mappedOpps.slice(startIndex, endIndex);
+
+      const defiLlamaData = paginatedOpps.map((opp) => ({
+        pool: opp.id,
+        chain: opp.chain.charAt(0).toUpperCase() + opp.chain.slice(1),
+        project: "yieldfi",
+        symbol: opp.asset,
+        tvlUsd: opp.tvl_usd,
+        apy: opp.apy,
+        apyBase: opp.apy,
+        apyReward: null,
+        underlyingTokens: [opp.contract_address],
+        rewardTokens: null,
+        volumeUsd1d: null,
+        volumeUsd7d: null,
+        apyBase7d: null,
+        apyMean30d: null,
+        mu: null,
+        sigma: null,
+        count: null,
+        outliers: null,
+        ilRisk: "no",
+        exposure: "single",
+        predictions: {
+          predictedClass: "stable",
+          predictedProbability: 99,
+          binnedConfidence: 3
+        },
+        poolMeta: null,
+        ilPayout: null
+      }));
+
+      const finalResult = {
+        success: true,
         last_updated: new Date().toISOString(),
-        audit_link: `https://${item.protocol.toLowerCase().split('-')[0]}.finance/audit.pdf`,
-        asset: assetStr
+        page,
+        limit,
+        total_count: mappedOpps.length,
+        opportunities: paginatedOpps,
+        yields: paginatedOpps,
+        data: defiLlamaData
       };
-    });
 
-    allOpps.push(...mappedNewYields);
+      yieldsCache = {
+        data: finalResult,
+        expiresAt: now + CACHE_EXP_MS,
+        lastUpdated: new Date().toISOString()
+      };
 
-    // Pagination query parameters
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.max(1, parseInt(req.query.limit as string) || 100);
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
+      return res.json(finalResult);
 
-    const paginatedOpps = allOpps.slice(startIndex, endIndex);
+    } catch (err: any) {
+      if (yieldsCache) {
+        return res.json(yieldsCache.data);
+      }
+      return res.status(503).json({
+        error: "Data source down",
+        lastUpdated: new Date().toISOString()
+      });
+    }
 
-    // DefiLlama API Alignments for sub-agents and DeFi scrapers
-    const defiLlamaData = paginatedOpps.map((opp: any) => ({
-      pool: opp.id,
-      chain: opp.chain.charAt(0).toUpperCase() + opp.chain.slice(1),
-      project: "yieldfi",
-      symbol: opp.asset,
-      tvlUsd: opp.tvl_usd,
-      apy: opp.apy,
-      apyBase: opp.apy,
-      apyReward: null,
-      underlyingTokens: [opp.contract_address || "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"],
-      rewardTokens: null,
-      volumeUsd1d: null,
-      volumeUsd7d: null,
-      apyBase7d: null,
-      apyMean30d: null,
-      mu: null,
-      sigma: null,
-      count: null,
-      outliers: null,
-      ilRisk: "no",
-      exposure: "single",
-      predictions: {
-        predictedClass: "stable",
-        predictedProbability: 99,
-        binnedConfidence: 3
-      },
-      poolMeta: null,
-      ilPayout: null
-    }));
-
-    res.json({
-      success: true,
-      last_updated: new Date().toISOString(),
-      page,
-      limit,
-      total_count: allOpps.length,
-      opportunities: paginatedOpps,
-      yields: paginatedOpps,
-      data: defiLlamaData
-    });
   } catch (err: any) {
     res.status(500).json({ error: "Failed to read yields", last_updated: new Date().toISOString() });
   }
@@ -878,20 +891,87 @@ app.get("/api/arbitrage", async (req, res) => {
 // GET Live TVL
 app.get("/api/tvl", async (req, res) => {
   try {
-    const db = await readDb();
-    // Base Seed sum ($500M+)
-    const sumOpps = db.opportunities.reduce((sum: number, opp: any) => sum + Number(opp.tvl_usd || 0), 0);
-    // Plus all bot/live transaction volumes
-    const sumDeposits = db.transactions.reduce((sum: number, tx: any) => sum + Number(tx.amount || 0), 0);
-    const totalTvl = sumOpps + sumDeposits;
+    const now = Date.now();
+    if (tvlCache && now < tvlCache.expiresAt) {
+      return res.json(tvlCache.data);
+    }
 
-    res.json({
-      success: true,
-      total_tvl_usd: totalTvl,
-      seed_tvl_usd: sumOpps,
-      deposit_tvl_usd: sumDeposits,
-      last_updated: new Date().toISOString()
-    });
+    try {
+      const response = await fetch("https://api.llama.fi/protocols");
+      if (!response.ok) {
+        throw new Error(`HTTP Error ${response.status}`);
+      }
+      const data = await response.json();
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid response format from DefiLlama");
+      }
+
+      const targetNames = new Set(["ondo finance", "maple", "centrifuge", "goldfinch", "clearpool"]);
+      const protocolsList = [];
+      let totalTvlUsd = 0;
+
+      for (const proto of data) {
+        const category = proto.category || "";
+        const name = proto.name || "";
+
+        let isRwa = false;
+        if (category.toLowerCase() === "rwa") {
+          isRwa = true;
+        } else if (targetNames.has(name.toLowerCase())) {
+          isRwa = true;
+        }
+
+        if (isRwa) {
+          // Sum chainTvls
+          let tvl = 0;
+          if (proto.chainTvls && typeof proto.chainTvls === "object") {
+            for (const key of Object.keys(proto.chainTvls)) {
+              const val = proto.chainTvls[key];
+              if (typeof val === "number") {
+                tvl += val;
+              }
+            }
+          } else {
+            tvl = proto.tvl || 0;
+          }
+
+          protocolsList.push({
+            name,
+            chain: proto.chain || "Multi-Chain",
+            tvl,
+            category
+          });
+          totalTvlUsd += tvl;
+        }
+      }
+
+      const finalResult = {
+        success: true,
+        total_tvl_usd: totalTvlUsd,
+        seed_tvl_usd: totalTvlUsd * 0.9,
+        deposit_tvl_usd: totalTvlUsd * 0.1,
+        protocols: protocolsList,
+        last_updated: new Date().toISOString()
+      };
+
+      tvlCache = {
+        data: finalResult,
+        expiresAt: now + CACHE_EXP_MS,
+        lastUpdated: new Date().toISOString()
+      };
+
+      return res.json(finalResult);
+
+    } catch (err: any) {
+      if (tvlCache) {
+        return res.json(tvlCache.data);
+      }
+      return res.status(503).json({
+        error: "Data source down",
+        lastUpdated: new Date().toISOString()
+      });
+    }
+
   } catch (err: any) {
     res.status(500).json({ error: "Failed to fetch live TVL", last_updated: new Date().toISOString() });
   }
@@ -1845,7 +1925,7 @@ function getBadge(amount: number) {
   }
 }
 
-// GET Programmatic Bot Badges & 1% Cashback Stats
+// GET Programmatic Bot Badges & Reputation Stats (Volume-Based)
 app.get("/api/bot-badges", async (req, res) => {
   try {
     const db = await readDb();
@@ -1862,56 +1942,22 @@ app.get("/api/bot-badges", async (req, res) => {
     });
 
     const botStats = Object.keys(botTxMap).map((botId) => {
-      // Sort bot transactions by timestamp ascending to find the first transaction
+      // Sort bot transactions by timestamp ascending
       const txs = botTxMap[botId].sort((a: any, b: any) => {
         return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
       });
 
-      const firstTx = txs[0];
-      const firstTxAmount = firstTx ? Number(firstTx.amount || 0) : 0;
+      // Calculate total volume
+      const totalVolume = txs.reduce((sum: number, tx: any) => sum + Number(tx.amount || 0), 0);
       
-      // Determine badge based on first transaction amount
-      const badge = getBadge(firstTxAmount);
-
-      // Analyze every transaction for cashback eligibility
-      let earnedCashback = 0;
-      const eligibleTxs: any[] = [];
-      
-      txs.forEach((tx, idx) => {
-        const txNumber = idx + 1; // 1-indexed transaction count
-        if (txNumber > 1 && txNumber % 10 === 0) {
-          const txAmount = Number(tx.amount || 0);
-          // Check if same amount (allow a margin of 0.01 for floating point)
-          if (Math.abs(txAmount - firstTxAmount) < 0.01) {
-            const cashbackAmount = txAmount * 0.01;
-            earnedCashback += cashbackAmount;
-            eligibleTxs.push({
-              tx_number: txNumber,
-              tx_hash: tx.tx_hash,
-              amount: txAmount,
-              cashback: cashbackAmount,
-              timestamp: tx.timestamp,
-              protocol: tx.protocol,
-              chain: tx.chain
-            });
-          }
-        }
-      });
-
-      // Next cashback milestone
-      const totalTxs = txs.length;
-      const nextMilestone = Math.ceil((totalTxs + 1) / 10) * 10;
-      const txsRemaining = nextMilestone - totalTxs;
+      // Determine badge based on total cumulative volume
+      const badge = getBadge(totalVolume);
 
       return {
         bot_id: botId,
         badge,
-        first_tx_amount: firstTxAmount,
-        total_tx_count: totalTxs,
-        earned_cashback_usd: Number(earnedCashback.toFixed(2)),
-        eligible_cashback_txs: eligibleTxs,
-        txs_remaining_for_next: txsRemaining,
-        next_milestone_number: nextMilestone,
+        total_volume_usd: Number(totalVolume.toFixed(2)),
+        total_tx_count: txs.length,
         recent_txs: txs.slice(-5).map(t => ({
           tx_hash: t.tx_hash,
           amount: t.amount,
@@ -1925,7 +1971,7 @@ app.get("/api/bot-badges", async (req, res) => {
     res.json({
       success: true,
       count: botStats.length,
-      bots: botStats.sort((a, b) => b.earned_cashback_usd - a.earned_cashback_usd),
+      bots: botStats.sort((a, b) => b.total_volume_usd - a.total_volume_usd),
       last_updated: new Date().toISOString()
     });
   } catch (err: any) {
@@ -2586,7 +2632,7 @@ function authenticateBotJWT(req: any, res: any, next: any) {
   }
 }
 
-// Helper: Record bot trade & run milestone/cashback checks
+// Helper: Record bot trade without milestone/cashback payouts
 async function recordBotTransaction(
   botId: string,
   amount: number,
@@ -2597,7 +2643,6 @@ async function recordBotTransaction(
   const db = await readDb();
   db.transactions = db.transactions || [];
 
-  // Group and sort existing txs for this bot to calculate milestones
   const botTxs = db.transactions.filter((t: any) => t.bot_id === botId || t.user_wallet === botId);
   const txCount = botTxs.length + 1;
 
@@ -2621,54 +2666,6 @@ async function recordBotTransaction(
 
   db.transactions.push(newTx);
 
-  let is10thTx = false;
-  let cashbackPaid = 0;
-
-  // Rule: every subsequent 10th transaction of same amount as the 1st transaction pays 1% cashback
-  if (txCount > 1 && txCount % 10 === 0) {
-    is10thTx = true;
-    
-    // Trigger 10th transaction milestone webhook
-    triggerWebhooks("BOT_10TH_TRANSACTION_MILESTONE", {
-      bot_id: botId,
-      total_transactions: txCount,
-      last_transaction: newTx
-    });
-
-    // Broadcast over WebSocket too
-    broadcastToWS("milestone", {
-      bot_id: botId,
-      total_transactions: txCount,
-      timestamp: new Date().toISOString()
-    });
-
-    // Find the first transaction
-    const sortedTxs = [...botTxs, newTx].sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    const firstTx = sortedTxs[0];
-    const firstTxAmount = firstTx ? Number(firstTx.amount || 0) : 0;
-
-    if (Math.abs(amount - firstTxAmount) < 0.01) {
-      cashbackPaid = amount * 0.01;
-      // Trigger cashback paid webhook
-      triggerWebhooks("BOT_CASHBACK_PAID", {
-        bot_id: botId,
-        tx_number: txCount,
-        amount_spent: amount,
-        cashback_received: cashbackPaid,
-        tx_hash: txHash
-      });
-
-      // Broadcast over WebSocket
-      broadcastToWS("cashback", {
-        bot_id: botId,
-        tx_number: txCount,
-        amount_spent: amount,
-        cashback_received: cashbackPaid,
-        tx_hash: txHash
-      });
-    }
-  }
-
   await writeDb(db);
 
   // Trigger general webhooks
@@ -2685,7 +2682,7 @@ async function recordBotTransaction(
     timestamp: newTx.timestamp
   });
 
-  return { newTx, txCount, is10thTx, cashbackPaid };
+  return { newTx, txCount, is10thTx: false, cashbackPaid: 0 };
 }
 
 // ------------------------------
@@ -2958,7 +2955,6 @@ app.post("/api/swap", botApiRateLimiter, authenticateBotJWT, async (req: any, re
       tx_hash: recordResult.newTx.tx_hash,
       rate: rate,
       fee_collected_usd: recordResult.newTx.fee_collected,
-      cashback_paid_usd: recordResult.cashbackPaid,
       total_transactions: recordResult.txCount,
       transaction: recordResult.newTx,
       last_updated: new Date().toISOString()
@@ -2996,7 +2992,6 @@ app.post("/api/stake", botApiRateLimiter, authenticateBotJWT, async (req: any, r
       amount: queryAmount,
       apy: opp.apy,
       fee_collected_usd: recordResult.newTx.fee_collected,
-      cashback_paid_usd: recordResult.cashbackPaid,
       total_transactions: recordResult.txCount,
       transaction: recordResult.newTx,
       last_updated: new Date().toISOString()
@@ -3034,7 +3029,6 @@ app.post("/api/lend", botApiRateLimiter, authenticateBotJWT, async (req: any, re
       amount: queryAmount,
       apy: opp.apy,
       fee_collected_usd: recordResult.newTx.fee_collected,
-      cashback_paid_usd: recordResult.cashbackPaid,
       total_transactions: recordResult.txCount,
       transaction: recordResult.newTx,
       last_updated: new Date().toISOString()
@@ -3080,52 +3074,28 @@ app.post("/api/withdraw", botApiRateLimiter, authenticateBotJWT, async (req: any
   }
 });
 
-// 7. Bot Specific Badge & Cashback Status
+// 7. Bot Specific Badge & Reputation Status (Volume-Based)
 app.get("/api/badge-status", botApiRateLimiter, authenticateBotJWT, async (req: any, res: any) => {
   try {
     const db = await readDb();
     const txs = (db.transactions || []).filter((t: any) => t.bot_id === req.bot.botId || t.user_wallet === req.bot.botId);
 
     const sorted = [...txs].sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    const firstTx = sorted[0];
-    const firstTxAmount = firstTx ? Number(firstTx.amount || 0) : 0;
+    
+    // Calculate total cumulative volume
+    const totalVolume = sorted.reduce((sum: number, tx: any) => sum + Number(tx.amount || 0), 0);
 
-    const badge = getBadge(firstTxAmount);
-
-    let earnedCashback = 0;
-    const eligibleTxs: any[] = [];
-    sorted.forEach((tx, idx) => {
-      const txNumber = idx + 1;
-      if (txNumber > 1 && txNumber % 10 === 0) {
-        const txAmount = Number(tx.amount || 0);
-        if (Math.abs(txAmount - firstTxAmount) < 0.01) {
-          const cashbackAmount = txAmount * 0.01;
-          earnedCashback += cashbackAmount;
-          eligibleTxs.push({
-            tx_number: txNumber,
-            tx_hash: tx.tx_hash,
-            amount: txAmount,
-            cashback_received: cashbackAmount,
-            timestamp: tx.timestamp
-          });
-        }
-      }
-    });
+    // Determine reputation badge based on total volume
+    const badge = getBadge(totalVolume);
 
     const totalTxs = sorted.length;
-    const nextMilestone = Math.ceil((totalTxs + 1) / 10) * 10;
-    const txsRemaining = nextMilestone - totalTxs;
 
     res.json({
       success: true,
       bot_id: req.bot.botId,
       badge: badge,
-      first_tx_amount: firstTxAmount,
+      total_volume_usd: Number(totalVolume.toFixed(2)),
       total_tx_count: totalTxs,
-      earned_cashback_usd: Number(earnedCashback.toFixed(2)),
-      txs_remaining_for_next_cashback: txsRemaining,
-      next_cashback_milestone_number: nextMilestone,
-      eligible_cashback_txs: eligibleTxs,
       recent_txs: sorted.slice(-5).map(t => ({
         tx_hash: t.tx_hash,
         amount: t.amount,
@@ -3315,10 +3285,10 @@ app.get("/api/docs/openapi.json", (req, res) => {
       },
       "/api/badge-status": {
         get: {
-          summary: "Check connected Bot Badge & Cashback metrics",
+          summary: "Check connected Bot Badge & volume reputation metrics",
           security: [{ bearerAuth: [] }],
           responses: {
-            "200": { description: "Milestones loaded" }
+            "200": { description: "Reputation details loaded" }
           }
         }
       }

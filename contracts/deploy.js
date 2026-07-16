@@ -27,7 +27,7 @@ const CONTRACT_ABI = [
     "function owner() external view returns (address)",
     "function executeTrade(uint256 amount) external",
     "function getBadgeLevel(uint256 amount) external view returns (uint8)",
-    "function bots(address) external view returns (uint256 firstTxAmount, uint256 txCount, uint8 badgeLevel, bool registered)"
+    "function bots(address) external view returns (uint256 cumulativeVolume, uint256 txCount, uint8 badgeLevel, bool registered)"
 ];
 
 // Bytecode placeholding - in a real deployment workflow, Hardhat or Foundry compiles these.

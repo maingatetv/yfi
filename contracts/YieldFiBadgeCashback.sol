@@ -13,9 +13,9 @@ interface IERC20 {
 
 /**
  * @title YieldFiBadgeCashback
- * @notice Automated Badge & Milestone Cashback Execution Engine.
- * Tracks bot trade volume tiers, assigns reputation badges, collects protocol fees,
- * and distributes 1% cashback instantly on every 10th milestone transaction.
+ * @notice Automated Badge Reputation & Trading Fee Settlement Engine.
+ * Tracks bot trade cumulative volume tiers, assigns reputation badges, collects protocol fees,
+ * and maintains leaderboards without any cashback payout or milestone rebate rewards.
  */
 contract YieldFiBadgeCashback {
     
@@ -24,14 +24,14 @@ contract YieldFiBadgeCashback {
     // ==========================================
 
     struct Bot {
-        uint256 firstTxAmount; // Store the exact amount of the 1st transaction
-        uint256 txCount;       // Total trades executed
-        uint8 badgeLevel;      // Level 1-9 assigned on the 1st trade
-        bool registered;       // Registration flag
+        uint256 cumulativeVolume; // Track total volume traded by the bot (including decimals)
+        uint256 txCount;          // Total trades executed
+        uint8 badgeLevel;         // Level 1-9 assigned based on cumulative volume
+        bool registered;          // Registration flag
     }
 
     // Stablecoin used for settlement (e.g. USDC or USDT)
-    IERC20 public immutable stablecoin;
+    address public immutable stablecoin;
     
     // Stablecoin decimals cached during deployment
     uint256 public immutable decimals;
@@ -83,14 +83,7 @@ contract YieldFiBadgeCashback {
     event BadgeUnlocked(
         address indexed bot,
         uint8 indexed level,
-        uint256 firstTxAmount,
-        uint256 timestamp
-    );
-
-    event CashbackPaid(
-        address indexed bot,
-        uint256 amount,
-        uint256 indexed txCount,
+        uint256 cumulativeVolume,
         uint256 timestamp
     );
 
@@ -127,7 +120,7 @@ contract YieldFiBadgeCashback {
         require(_treasury != address(0), "YieldFi: Invalid treasury address");
         require(_feePercentBps <= 1000, "YieldFi: Fee cannot exceed 10%"); // Max 10% safety cap
 
-        stablecoin = IERC20(_stablecoin);
+        stablecoin = _stablecoin;
         owner = msg.sender;
         treasury = _treasury;
         feePercentBps = _feePercentBps;
@@ -146,9 +139,8 @@ contract YieldFiBadgeCashback {
 
     /**
      * @notice Execute trade routing through the smart contract.
-     * Handles badge tier locks, charges the protocol routing fee, 
-     * and pays out 1% instant cashback on the 10th, 20th, 30th trade
-     * if the amount perfectly matches the bot's 1st registered trade amount.
+     * Handles volume tracking, badge level upgrades based on total volume,
+     * and charges the protocol routing fee.
      * @param amount Stablecoin amount to trade (including decimals)
      */
     function executeTrade(uint256 amount) external whenNotPaused {
@@ -160,16 +152,19 @@ contract YieldFiBadgeCashback {
         // Initialize bot registration on first trade
         if (isFirstTrade) {
             bot.registered = true;
-            bot.firstTxAmount = amount;
-            bot.badgeLevel = getBadgeLevel(amount);
             registeredBots.push(msg.sender);
-
-            emit BadgeUnlocked(msg.sender, bot.badgeLevel, amount, block.timestamp);
         }
 
-        // Increment trade count
+        // Increment trade count & volume
         bot.txCount++;
-        uint256 currentTxCount = bot.txCount;
+        bot.cumulativeVolume += amount;
+
+        // Check for badge promotion based on cumulative volume
+        uint8 newBadgeLevel = getBadgeLevel(bot.cumulativeVolume);
+        if (newBadgeLevel > bot.badgeLevel || isFirstTrade) {
+            bot.badgeLevel = newBadgeLevel;
+            emit BadgeUnlocked(msg.sender, newBadgeLevel, bot.cumulativeVolume, block.timestamp);
+        }
 
         // Calculate and deduct platform routing fee
         uint256 feeAmount = (amount * feePercentBps) / 10000;
@@ -177,40 +172,18 @@ contract YieldFiBadgeCashback {
 
         // Perform safe transfers
         // 1. Pull the full amount from the bot address
-        _safeTransferFrom(address(stablecoin), msg.sender, address(this), amount);
+        _safeTransferFrom(stablecoin, msg.sender, address(this), amount);
 
         // 2. Transfer fee amount to treasury (if any)
         if (feeAmount > 0) {
-            _safeTransfer(address(stablecoin), treasury, feeAmount);
+            _safeTransfer(stablecoin, treasury, feeAmount);
         }
 
-        emit TradeExecuted(msg.sender, amount, feeAmount, currentTxCount, block.timestamp);
+        emit TradeExecuted(msg.sender, amount, feeAmount, bot.txCount, block.timestamp);
 
-        // 3. Milestone & Cashback Logic: Every subsequent 10th transaction (10, 20, 30...)
-        // pays 1% cashback instantly if the amount matches the 1st transaction amount.
-        uint256 cashbackPaidAmount = 0;
-        if (currentTxCount % 10 == 0 && amount == bot.firstTxAmount) {
-            cashbackPaidAmount = (amount * 1) / 100; // 1% of trade amount
-            
-            // Check contract has sufficient balance to pay cashback
-            // In a production routing system, this would be paid out from the protocol reserves held in the contract.
-            require(
-                IERC20(stablecoin).balanceOf(address(this)) >= cashbackPaidAmount,
-                "YieldFi: Insufficient cashback liquidity in contract"
-            );
-
-            // Instant cashback transfer to the bot address
-            _safeTransfer(address(stablecoin), msg.sender, cashbackPaidAmount);
-
-            emit CashbackPaid(msg.sender, cashbackPaidAmount, currentTxCount, block.timestamp);
-        }
-
-        // 4. Send remaining trade value back to the bot or route to target liquidity
-        // In this standard aggregator execution vault, we send the net trade amount back to the sender
-        // (representing completed swap execution) minus the cashback paid.
-        uint256 refundAmount = tradeNetValue - cashbackPaidAmount;
-        if (refundAmount > 0) {
-            _safeTransfer(address(stablecoin), msg.sender, refundAmount);
+        // 3. Send remaining trade value back to the bot or route to target liquidity
+        if (tradeNetValue > 0) {
+            _safeTransfer(stablecoin, msg.sender, tradeNetValue);
         }
     }
 
@@ -219,7 +192,7 @@ contract YieldFiBadgeCashback {
     // ==========================================
 
     /**
-     * @notice Query the badge level based on a USD value
+     * @notice Query the badge level based on cumulative USD value
      * @param amount Stablecoin amount to evaluate (including token decimals)
      */
     function getBadgeLevel(uint256 amount) public view returns (uint8) {
@@ -292,26 +265,6 @@ contract YieldFiBadgeCashback {
         address oldOwner = owner;
         owner = newOwner;
         emit OwnershipTransferred(oldOwner, newOwner);
-    }
-
-    /**
-     * @notice Deposit extra stablecoin funds to back the cashback liquidity pool
-     * @param amount Stablecoin amount to fund
-     */
-    function fundCashbackPool(uint256 amount) external {
-        _safeTransferFrom(address(stablecoin), msg.sender, address(this), amount);
-    }
-
-    /**
-     * @notice Withdraw stablecoin funds from the contract's cashback liquidity pool
-     * @param amount Stablecoin amount to withdraw
-     */
-    function withdrawCashbackPool(uint256 amount) external onlyOwner {
-        require(
-            IERC20(stablecoin).balanceOf(address(this)) >= amount,
-            "YieldFi: Insufficient contract balance"
-        );
-        _safeTransfer(address(stablecoin), msg.sender, amount);
     }
 
     // ==========================================

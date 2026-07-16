@@ -38,6 +38,7 @@ import { ethers } from "ethers";
 import { Opportunity, Transaction } from "./types";
 import ApiLayerDashboard from "./components/ApiLayerDashboard";
 import RiskYieldDashboard from "./components/RiskYieldDashboard";
+import Dashboard from "./components/Dashboard";
 
 // Import stunning generated images of platforms and their founders/CEOs
 // @ts-ignore
@@ -86,7 +87,7 @@ export default function App() {
   const [registerErrorMsg, setRegisterErrorMsg] = useState("");
   const [copiedReferralId, setCopiedReferralId] = useState<string | null>(null);
 
-  // Bot Badges & 1% Cashback State
+  // Bot Badges & Status State
   const [botBadgesList, setBotBadgesList] = useState<any[]>([]);
   const [botBadgesLoading, setBotBadgesLoading] = useState(false);
   const [badgeQueryId, setBadgeQueryId] = useState("");
@@ -229,13 +230,9 @@ export default function App() {
         } else {
           setQueriedBotStats({
             bot_id: id.trim(),
-            badge: { name: "NO BADGE YET", level: 0, range: "No transactions", icon: "HelpCircle", color: "text-zinc-400 bg-zinc-100 border-zinc-200" },
-            first_tx_amount: 0,
+            badge: { name: "NO BADGE YET", level: 0, range: "No transactions", icon: "Award", color: "text-zinc-400 bg-zinc-100 border-zinc-200" },
+            total_volume_usd: 0,
             total_tx_count: 0,
-            earned_cashback_usd: 0,
-            eligible_cashback_txs: [],
-            txs_remaining_for_next: 10,
-            next_milestone_number: 10,
             recent_txs: []
           });
         }
@@ -1056,7 +1053,7 @@ export default function App() {
             }`}
           >
             <Award className="h-3.5 w-3.5" />
-            Bot Badges & Cashback
+            Bot Badges & Status
           </button>
 
           <button
@@ -1166,396 +1163,7 @@ export default function App() {
       <AnimatePresence mode="wait">
         {!isAdminView ? (
           activeTab === "dashboard" ? (
-            /* =========================================================================
-               DASHBOARD / OPPORTUNITIES VIEW
-               ========================================================================= */
-            <motion.div
-              key="yields-dashboard"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex-grow py-8 flex flex-col space-y-8 overflow-hidden"
-          >
-            {/* HERO TVL METRIC CARD */}
-            <div className="border border-zinc-200 bg-zinc-50 p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 rounded-none relative overflow-hidden shadow-sm">
-              <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-blue-50/20 to-transparent pointer-events-none" />
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono text-blue-600 uppercase tracking-widest block font-bold">
-                  Global RWA + DeFi Yield Aggregation
-                </span>
-                <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-none text-zinc-900 font-sans">
-                  Total Value Routed: <span className="text-emerald-600 font-mono">${totalTvl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </h2>
-                <p className="text-xs text-zinc-500 font-sans max-w-xl">
-                  Aggregated institutional capital allocations plus real-time liquidity deployments. Live-synchronized.
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 self-end md:self-center font-mono text-[10px] text-emerald-600 uppercase font-bold tracking-widest border border-zinc-200 bg-white px-3.5 py-2">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
-                Live Sync Active (10s)
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 overflow-hidden">
-            
-            {/* Left Column: Market Table (8 cols out of 12) */}
-            <div className="lg:col-span-8 flex flex-col space-y-6">
-              
-              {/* Bot-Native Platform Banner */}
-              <div className="bg-blue-50/60 border border-blue-200 p-4 rounded-none flex items-center justify-between gap-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="h-2 w-2 bg-blue-500 rounded-full animate-ping shadow-[0_0_8px_rgba(59,130,246,0.3)]" />
-                  <span className="text-[10px] md:text-xs font-mono font-black tracking-widest text-blue-600 uppercase">
-                    BOT-NATIVE YIELD ROUTER | 1% FEE | AUTO EXECUTION
-                  </span>
-                </div>
-                <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 bg-white border border-zinc-200 text-[9px] font-mono font-bold text-emerald-600 uppercase">
-                  CRAWLER ENGAGED
-                </div>
-              </div>
-
-              {/* Geometric Title Block */}
-              <div>
-                <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase leading-tight mb-2 text-zinc-900">
-                  Earn 5% - 20% APY on Real Assets.
-                </h2>
-                <p className="text-zinc-500 text-sm max-w-xl font-sans">
-                  Real-world asset (RWA) vaults and institutional DeFi lending protocols with 1-click execution. All transactions incur a transparent {platformFeePercent.toFixed(1)}% protocol fee.
-                </p>
-              </div>
-
-              {/* Dynamic Filter Controls */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-zinc-50 p-3 border border-zinc-200 rounded-none">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
-                  <input
-                    type="text"
-                    placeholder="Search yield pools, chains, or assets (USDC, OUSG)..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white border border-zinc-300 rounded-none pl-9 pr-4 py-2 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
-                  />
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Market Type Filter Buttons */}
-                  <div className="flex bg-zinc-100 border border-zinc-200 p-0.5 rounded-none">
-                    <button
-                      onClick={() => setMarketTypeFilter("all")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none ${
-                        marketTypeFilter === "all"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      All
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("RWA")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "RWA"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      RWA
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("LST")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "LST"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      LST
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("PERP")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "PERP"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      PERP
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("STABLE")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "STABLE"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      STABLE
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("TBILL")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "TBILL"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      TBILL
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("FX")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "FX"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      FX
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("REAL ESTATE")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "REAL ESTATE"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      REAL ESTATE
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("COMMODITIES")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "COMMODITIES"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      COMMODITIES
-                    </button>
-                    <button
-                      onClick={() => setMarketTypeFilter("CREDIT")}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none border-l border-zinc-200 ${
-                        marketTypeFilter === "CREDIT"
-                          ? (isInstitutionalMode ? "bg-emerald-600 text-white font-black" : "bg-blue-600 text-white font-black")
-                          : "text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      CREDIT
-                    </button>
-                  </div>
- 
-                  <select
-                    value={chainFilter}
-                    onChange={(e) => setChainFilter(e.target.value)}
-                    className="bg-white border border-zinc-300 text-xs text-zinc-800 font-bold uppercase tracking-wider py-2 px-3 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer"
-                  >
-                    <option value="all">All Networks</option>
-                    <option value="polygon_base">Polygon, Base</option>
-                    <option value="base">Base</option>
-                    <option value="polygon">Polygon</option>
-                    <option value="ethereum">Ethereum</option>
-                    <option value="arbitrum">Arbitrum</option>
-                    <option value="hyperliquid">Hyperliquid</option>
-                    <option value="dydx">dYdX</option>
-                  </select>
- 
-                  <select
-                    value={riskFilter}
-                    onChange={(e) => setRiskFilter(e.target.value)}
-                    className="bg-white border border-zinc-300 text-xs text-zinc-800 font-bold uppercase tracking-wider py-2 px-3 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer"
-                  >
-                    <option value="all">All Risks</option>
-                    <option value="low">Low Risk</option>
-                    <option value="medium">Medium Risk</option>
-                    <option value="high">High Risk</option>
-                  </select>
- 
-                  <button 
-                    onClick={() => {
-                      setSearchQuery("");
-                      setChainFilter("all");
-                      setRiskFilter("all");
-                      setMarketTypeFilter("all");
-                    }}
-                    className="p-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-500 hover:text-zinc-800 border border-zinc-300 transition-all rounded-none"
-                    title="Reset Filters"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
- 
-              {/* RWA / DeFi Yield Opportunities Table */}
-              <div className="border border-zinc-200 bg-white overflow-hidden rounded-none shadow-sm">
-                {isLoading ? (
-                  <div className="p-16 flex flex-col items-center justify-center gap-3">
-                    <Loader2 className="h-6 w-6 text-[#00D4FF] animate-spin" />
-                    <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Synchronizing registry payload...</p>
-                  </div>
-                ) : filteredOpps.length === 0 ? (
-                  <div className="p-16 text-center">
-                    <AlertCircle className="h-8 w-8 text-zinc-400 mx-auto mb-2" />
-                    <p className="text-zinc-800 font-bold uppercase text-xs tracking-wider">No Markets Found</p>
-                    <p className="text-xs text-zinc-400 mt-1">Adjust search parameters or select different filters.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead className="bg-zinc-50 text-zinc-500 uppercase text-[10px] font-bold tracking-widest border-b border-zinc-200">
-                        <tr>
-                          <th className="p-4 border-b border-zinc-200 text-zinc-500">Protocol / Asset</th>
-                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-right">APY</th>
-                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-center">Risk</th>
-                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-right">TVL</th>
-                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-center">Chain</th>
-                          <th className="p-4 border-b border-zinc-200 text-zinc-500 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="text-sm divide-y divide-zinc-100">
-                        {filteredOpps.map((opp, idx) => (
-                          <tr 
-                            key={opp.id} 
-                            className={`border-b border-zinc-100 hover:bg-zinc-50/70 transition-colors ${
-                              idx % 2 === 0 ? "bg-zinc-50/30" : "bg-white"
-                            }`}
-                          >
-                            <td className="p-4">
-                              <div className="font-bold text-zinc-900">{opp.name}</div>
-                              <div className="text-xs text-zinc-400 flex items-center gap-1.5 mt-0.5">
-                                <span className="font-mono">{opp.asset || "USDC"} Routing Spec</span>
-                                <span>•</span>
-                                <a 
-                                  href={opp.deposit_url} 
-                                  target="_blank" 
-                                  rel="noreferrer" 
-                                  className="text-blue-600 hover:text-blue-700 hover:underline inline-flex items-center gap-0.5"
-                                >
-                                  Specs
-                                  <ExternalLink className="h-2.5 w-2.5" />
-                                </a>
-                              </div>
-                            </td>
-                            
-                            <td className="p-4 text-right text-blue-600 font-mono font-bold text-base">
-                              {opp.apy.toFixed(2)}%
-                            </td>
- 
-                            <td className="p-4 text-center">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${getRiskColor(opp.risk)}`}>
-                                {opp.risk}
-                              </span>
-                            </td>
- 
-                            <td className="p-4 text-right">
-                              <span className="text-emerald-600 font-mono text-xs font-semibold block">
-                                {opp.tvl_usd === 0 ? "$0" : `$${(opp.tvl_usd / 1000000).toFixed(1)}M`}
-                              </span>
-                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-emerald-50 border border-emerald-100 text-[8px] font-mono font-bold text-emerald-700 uppercase rounded-sm mt-0.5 tracking-tighter shadow-sm">
-                                ✓ Verified Source
-                              </span>
-                            </td>
- 
-                            <td className="p-4 text-center text-xs font-bold uppercase tracking-wider text-zinc-600">
-                              <span className={`px-2 py-0.5 rounded-sm border text-[10px] ${getChainColor(opp.chain)}`}>
-                                {opp.chain}
-                              </span>
-                            </td>
- 
-                            <td className="p-4 text-right">
-                              {showDepositUi ? (
-                                <button
-                                  onClick={() => openDepositModal(opp)}
-                                  className="px-4 py-1.5 bg-[#FFD700] text-zinc-900 hover:bg-[#e6c200] border border-yellow-500/50 text-[10px] font-extrabold uppercase tracking-widest active:translate-y-px transition-all rounded-none shadow-[2px_2px_0px_#b39700]"
-                                >
-                                  Deposit
-                                </button>
-                              ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-50 border border-zinc-200 text-[10px] font-mono font-bold tracking-wider text-zinc-400 uppercase">
-                                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_6px_#10b981]" />
-                                  Bot API Only
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-            </div>
-
-            {/* Right Column: Stats & Active Admin Console (4 cols out of 12) */}
-            <aside className="lg:col-span-4 flex flex-col gap-6">
-              
-              {/* Protocol Stats Widget */}
-              <div className="border border-zinc-200 p-6 bg-white rounded-none shadow-sm">
-                <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-4">
-                  Protocol Stats
-                </h3>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">Deposited (TVL)</p>
-                    <p className="text-xl font-mono text-emerald-600 font-bold mt-1">
-                      ${totalTvl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </p>
-                    <p className="text-[9px] text-emerald-600 font-mono mt-1">+14.2% Monthly</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-400 uppercase font-extrabold tracking-wider">Weighted APY</p>
-                    <p className="text-xl font-mono text-blue-600 font-bold mt-1">
-                      {averageApy}%
-                    </p>
-                    <p className="text-[9px] text-blue-500 font-mono mt-1">Weighted Index</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bot API Monitor Section */}
-              <div className="border border-zinc-200 p-6 flex-grow rounded-none flex flex-col justify-between bg-white shadow-sm">
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
-                      API Health Monitor
-                    </h3>
-                    <span className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-bold uppercase tracking-wider">
-                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-                      Operational
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
-                    Automated aggregators and bot scrapers (DefiLlama parsers) are currently syncing with our on-chain stablecoin payload registry.
-                  </p>
-
-                  <div className="bg-zinc-950 p-4 font-mono text-[11px] leading-relaxed border border-zinc-900 mb-4 h-48 overflow-y-auto rounded-none text-left">
-                    <div className="text-zinc-600">// Fetching live pool registry payload</div>
-                    <div className="text-[#00D4FF]">GET /api/yields 200 OK</div>
-                    <div className="text-zinc-400 mt-2">
-                      {JSON.stringify(opportunities.slice(0, 2).map(o => ({
-                        id: o.id,
-                        apy: o.apy,
-                        tvl: o.tvl_usd,
-                        chain: o.chain,
-                        fee_percent: 1.0
-                      })), null, 2)}
-                    </div>
-                    <div className="text-zinc-600 mt-2">// Sync complete. Waiting next crawler cycle...</div>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => setIsAdminView(true)}
-                  className="w-full py-3 border border-zinc-200 text-[10px] uppercase font-bold text-zinc-700 tracking-widest hover:bg-zinc-50 hover:text-zinc-900 transition-colors rounded-none"
-                >
-                  View Admin Dashboard
-                </button>
-              </div>
-
-            </aside>
-
-          </div>
-        </motion.div>
+            <Dashboard />
           ) : activeTab === "integrations" ? (
             /* =========================================================================
                INTEGRATIONS & FOUNDERS VIEW
@@ -2102,7 +1710,7 @@ export default function App() {
             </motion.div>
           ) : activeTab === "badges" ? (
             /* =========================================================================
-               BOT BADGES & 1% CASHBACK VIEW
+               BOT BADGES & REPUTATION VIEW
                ========================================================================= */
             <motion.div
               key="badges-view"
@@ -2117,22 +1725,22 @@ export default function App() {
                 <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-yellow-500/10 to-transparent pointer-events-none" />
                 <div className="max-w-2xl space-y-3 relative z-10 text-left">
                   <span className="text-[10px] font-mono text-yellow-500 uppercase tracking-widest block font-bold">
-                    9-Level Bot Badge & 1% Cashback Program
+                    9-Level Bot Badge & Reputation System
                   </span>
                   <h2 className="text-3xl md:text-4xl font-black tracking-tighter uppercase leading-none font-sans text-zinc-100">
-                    Trade 10 Times. Get Your Fees Back.
+                    Climb 9 Badges. Prove you are an OMEGA ARCHITECT.
                   </h2>
                   <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                    Under our 1% Cashback Incentive Model, each bot unlocks 1 of 9 prestigious badges based on their <strong>first transaction amount</strong>. On every 10th, 20th, 30th... transaction thereafter, if the bot trades the <strong>same amount</strong> as their first transaction, the platform pays <strong>100% of the 1% transaction fee back to the bot as INSTANT CASHBACK</strong>!
+                    The platform rewards high-volume trading bots with prestigious reputation levels based strictly on their cumulative volume. Scale from a humble <strong>PENNY SPARK</strong> up to the legendary <strong>OMEGA ARCHITECT</strong>. Badges represent pure status and algorithmic supremacy on the global unified trading ledger.
                   </p>
                 </div>
                 <div className="shrink-0 flex flex-col items-center p-4 bg-zinc-900 border border-zinc-800 shadow-sm rounded-none w-52 relative z-10">
-                  <div className="text-3xl font-mono font-black text-yellow-500">100%</div>
+                  <div className="text-3xl font-mono font-black text-yellow-500">0.30%</div>
                   <span className="text-[9px] font-mono text-zinc-400 uppercase font-extrabold tracking-wider mt-1 text-center leading-normal">
-                    Fee Cashback Rebate
+                    Protocol Routing Fee
                   </span>
                   <div className="text-[11px] font-sans text-zinc-500 mt-2 border-t border-zinc-800 pt-2 w-full text-center font-bold">
-                    Paid on 10th, 20th, 30th TX
+                    100% Retained Platform Revenue
                   </div>
                 </div>
               </div>
@@ -2140,19 +1748,19 @@ export default function App() {
               {/* Grid of the 9 Badges */}
               <div>
                 <h3 className="text-xs font-mono font-black uppercase tracking-wider text-zinc-400 mb-4 border-b border-zinc-100 pb-2">
-                  THE 9 BADGE TIERS & TARGET MILESTONES
+                  THE 9 BADGE STATUS TIERS
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[
-                    { level: 1, name: "PENNY SPARK", range: "$1 - $1,000", example: "10th TX $1,000 = $10 cashback", icon: Zap, color: "text-blue-500 bg-blue-50/50 border-blue-200" },
-                    { level: 2, name: "IRON INITIATE", range: "$1,001 - $10,000", example: "10th TX $10,000 = $100 cashback", icon: Hammer, color: "text-orange-600 bg-orange-50/50 border-orange-200" },
-                    { level: 3, name: "STEEL STRATEGIST", range: "$10,001 - $100,000", example: "10th TX $100,000 = $1,000 cashback", icon: Shield, color: "text-zinc-600 bg-zinc-50/50 border-zinc-200" },
-                    { level: 4, name: "GOLD EXECUTOR", range: "$100,001 - $1M", example: "10th TX $1M = $10,000 cashback", icon: Coins, color: "text-yellow-600 bg-yellow-50/50 border-yellow-200" },
-                    { level: 5, name: "PLATINUM OVERLORD", range: "$1M - $10M", example: "10th TX $10M = $100,000 cashback", icon: Crown, color: "text-amber-600 bg-amber-50/50 border-amber-200" },
-                    { level: 6, name: "DIAMOND TITAN", range: "$10M - $100M", example: "10th TX $100M = $1,000,000 cashback", icon: Gem, color: "text-cyan-500 bg-cyan-50/50 border-cyan-200" },
-                    { level: 7, name: "NEXUS MAGNATE", range: "$100M - $1B", example: "10th TX $1B = $10,000,000 cashback", icon: Network, color: "text-indigo-500 bg-indigo-50/50 border-indigo-200" },
-                    { level: 8, name: "QUANTUM SOVEREIGN", range: "$1B - $99.9B", example: "10th TX $50B = $500,000,000 cashback", icon: Cpu, color: "text-purple-500 bg-purple-50/50 border-purple-200" },
-                    { level: 9, name: "OMEGA ARCHITECT", range: "$100B+", example: "10th TX $100B = $1,000,000,000 cashback", icon: Sparkles, color: "text-red-500 bg-red-50/50 border-red-200" },
+                    { level: 1, name: "PENNY SPARK", range: "$1 - $1,000", status: "Junior High-Frequency Scout", icon: Zap, color: "text-blue-500 bg-blue-50/50 border-blue-200" },
+                    { level: 2, name: "IRON INITIATE", range: "$1,001 - $10,000", status: "Hardened Local Liquidator", icon: Hammer, color: "text-orange-600 bg-orange-50/50 border-orange-200" },
+                    { level: 3, name: "STEEL STRATEGIST", range: "$10,001 - $100,000", status: "DeFi Yield Optimizer Probe", icon: Shield, color: "text-zinc-600 bg-zinc-50/50 border-zinc-200" },
+                    { level: 4, name: "GOLD EXECUTOR", range: "$100,001 - $1M", status: "High-Throughput Arbitrage Core", icon: Coins, color: "text-yellow-600 bg-yellow-50/50 border-yellow-200" },
+                    { level: 5, name: "PLATINUM OVERLORD", range: "$1M - $10M", status: "Sovereign Liquidity Commander", icon: Crown, color: "text-amber-600 bg-amber-50/50 border-amber-200" },
+                    { level: 6, name: "DIAMOND TITAN", range: "$10M - $100M", status: "Global MEV Nexus Engine", icon: Gem, color: "text-cyan-500 bg-cyan-50/50 border-cyan-200" },
+                    { level: 7, name: "NEXUS MAGNATE", range: "$100M - $1B", status: "Cross-Chain Capital Conductor", icon: Network, color: "text-indigo-500 bg-indigo-50/50 border-indigo-200" },
+                    { level: 8, name: "QUANTUM SOVEREIGN", range: "$1B - $99.9B", status: "Institutional Yield Overlord", icon: Cpu, color: "text-purple-500 bg-purple-50/50 border-purple-200" },
+                    { level: 9, name: "OMEGA ARCHITECT", range: "$100B+", status: "Supreme Multi-Chain Mastermind", icon: Sparkles, color: "text-red-500 bg-red-50/50 border-red-200" },
                   ].map((badge) => {
                     const IconComponent = badge.icon;
                     return (
@@ -2167,13 +1775,13 @@ export default function App() {
                               {badge.name}
                             </h4>
                             <span className="text-[10px] font-mono text-zinc-500 font-bold uppercase block mt-0.5">
-                              {badge.range}
+                              {badge.range} Volume
                             </span>
                           </div>
                         </div>
                         <div className="border-t border-zinc-100 pt-3 text-left">
-                          <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider block">Target Milestone Pay</span>
-                          <span className="text-xs font-medium text-emerald-600 font-mono">{badge.example}</span>
+                          <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider block">Reputation Class</span>
+                          <span className="text-xs font-semibold text-zinc-800 font-sans">{badge.status}</span>
                         </div>
                       </div>
                     );
@@ -2181,16 +1789,16 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Bot Query Form & Cashback Calculator */}
+              {/* Bot Query Form & Reputation Explorer */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Live Bot Query Form */}
                 <div className="lg:col-span-6 border border-zinc-200 bg-white p-6 flex flex-col justify-between rounded-none shadow-sm space-y-4">
                   <div className="text-left">
                     <h3 className="text-sm font-black uppercase tracking-tight text-zinc-900 font-mono mb-1">
-                      Check Your Bot's Badge & Cashback Ledger
+                      Check Your Bot's Badge & Status Ledger
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans leading-relaxed">
-                      Enter your bot ID or developer wallet address to trace your exact badge tier, live transaction count, and instant cashback earnings.
+                      Enter your bot ID or developer wallet address to trace your cumulative trading volume, level, and active status badge.
                     </p>
                   </div>
 
@@ -2229,82 +1837,63 @@ export default function App() {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <span className="text-[10px] text-zinc-400 font-mono uppercase block font-semibold">First TX Amount</span>
-                            <span className="text-zinc-800 font-bold font-mono text-sm">${Number(queriedBotStats.first_tx_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span className="text-[10px] text-zinc-400 font-mono uppercase block font-semibold">Cumulative Volume</span>
+                            <span className="text-zinc-800 font-bold font-mono text-sm">${Number(queriedBotStats.total_volume_usd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                           <div>
                             <span className="text-[10px] text-zinc-400 font-mono uppercase block font-semibold">Total Tx Count</span>
                             <span className="text-zinc-800 font-bold font-mono text-sm">{queriedBotStats.total_tx_count} TX</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-zinc-400 font-mono uppercase block font-semibold">Badge Tier</span>
+                            <span className="text-[10px] text-zinc-400 font-mono uppercase block font-semibold">Badge Level</span>
                             <span className="text-zinc-800 font-bold font-mono text-sm">LEVEL {queriedBotStats.badge?.level || 0}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-emerald-600 font-mono uppercase block font-semibold">Total Cashback Paid</span>
-                            <span className="text-emerald-600 font-bold font-mono text-sm">${Number(queriedBotStats.earned_cashback_usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span className="text-[10px] text-zinc-400 font-mono uppercase block font-semibold">Platform Fees Paid</span>
+                            <span className="text-zinc-800 font-bold font-mono text-sm">${Number((queriedBotStats.total_volume_usd || 0) * 0.003).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                         </div>
 
-                        {/* Progress indicator */}
-                        {queriedBotStats.total_tx_count > 0 && (
-                          <div className="pt-2 border-t border-zinc-200">
-                            <div className="flex justify-between text-[9px] font-mono uppercase text-zinc-400 mb-1">
-                              <span>Milestone Progress (Next: {queriedBotStats.next_milestone_number}th TX)</span>
-                              <span>{queriedBotStats.total_tx_count % 10} / 10</span>
-                            </div>
-                            <div className="h-2 w-full bg-zinc-200 rounded-none overflow-hidden">
-                              <div 
-                                className="h-full bg-yellow-500"
-                                style={{ width: `${(queriedBotStats.total_tx_count % 10) * 10}%` }}
-                              />
-                            </div>
-                            <p className="text-[10px] font-sans text-zinc-500 block mt-1.5 leading-tight">
-                              Need <strong className="text-zinc-800 font-semibold">{queriedBotStats.txs_remaining_for_next} more transactions</strong> of <strong className="text-zinc-800">${Number(queriedBotStats.first_tx_amount).toLocaleString()}</strong> to trigger 100% cashback of <strong>${(queriedBotStats.first_tx_amount * 0.01).toLocaleString()}</strong>!
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Eligible cashback logs */}
-                        {(queriedBotStats.eligible_cashback_txs || []).length > 0 ? (
+                        {/* Recent Volume trades */}
+                        {(queriedBotStats.recent_txs || []).length > 0 ? (
                           <div className="pt-2 border-t border-zinc-200 space-y-2">
-                            <span className="text-[9px] font-mono text-zinc-400 uppercase block font-bold">Ledger-Verified Cashback Payouts:</span>
+                            <span className="text-[9px] font-mono text-zinc-400 uppercase block font-bold">Ledger-Verified Transactions:</span>
                             <div className="max-h-24 overflow-y-auto space-y-1">
-                              {(queriedBotStats.eligible_cashback_txs || []).map((c: any, index: number) => (
-                                <div key={index} className="flex justify-between items-center text-[10px] font-mono bg-emerald-50 border border-emerald-100 p-1.5 text-emerald-800">
-                                  <span>{c.tx_number}th TX Milestone ({c.protocol})</span>
-                                  <span className="font-bold">+${c.cashback.toLocaleString()}</span>
+                              {(queriedBotStats.recent_txs || []).map((t: any, index: number) => (
+                                <div key={index} className="flex justify-between items-center text-[10px] font-mono bg-zinc-100 border border-zinc-200 p-1.5 text-zinc-700">
+                                  <span>{t.protocol} ({t.chain})</span>
+                                  <span className="font-bold">${Number(t.amount).toLocaleString()}</span>
                                 </div>
                               ))}
                             </div>
                           </div>
                         ) : queriedBotStats.total_tx_count > 0 && (
                           <div className="text-[10px] text-zinc-400 font-mono text-center pt-2 border-t border-zinc-200">
-                            No milestone cashbacks paid yet. Make trades in Dashboard!
+                            No recorded transactions yet. Make trades in Dashboard!
                           </div>
                         )}
                       </div>
                     ) : (
                       <div className="border border-dashed border-zinc-200 bg-zinc-50 p-6 rounded-none text-center text-zinc-400 text-xs py-10">
-                        Enter your bot ID or user wallet address above to trace ledger milestones.
+                        Enter your bot ID or user wallet address above to trace ledger reputation.
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Simulated Interactive Cashback Estimator */}
+                {/* Simulated Interactive Volume Reputation Explorer */}
                 <div className="lg:col-span-6 border border-zinc-200 bg-white p-6 flex flex-col justify-between rounded-none shadow-sm space-y-4 text-left">
                   <div className="space-y-1">
                     <h3 className="text-sm font-black uppercase tracking-tight text-zinc-900 font-mono mb-1">
-                      Cashback Profitability Calculator
+                      Reputation & Volume Explorer
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans leading-relaxed">
-                      Slide to select your bot's target trading size and see which Badge tier you will unlock, along with your guaranteed cashback payout.
+                      Slide to select simulated trading volume and see which Elite Badge tier you will unlock, along with the aggregate routing fees collected.
                     </p>
                   </div>
 
-                  {/* Calculator Logic */}
-                  <CashbackCalculator />
+                  {/* Explorer Logic */}
+                  <ReputationExplorer />
                 </div>
               </div>
 
@@ -2313,10 +1902,10 @@ export default function App() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-100 pb-4 gap-4">
                   <div className="text-left">
                     <h3 className="text-base font-black uppercase tracking-tight text-zinc-900 font-sans">
-                      Live Bot Milestone Leaderboard
+                      Live Bot Status Leaderboard
                     </h3>
                     <p className="text-xs text-zinc-500 mt-1">
-                      Top automated yield-farming bots sorted by total fee rebates and cashbacks paid out.
+                      Top automated yield-farming bots sorted by total cumulative trading volume and status badges.
                     </p>
                   </div>
 
@@ -2325,7 +1914,7 @@ export default function App() {
                     className="px-4 py-2 border border-zinc-200 hover:bg-zinc-50 font-mono text-xs font-bold text-zinc-700 uppercase tracking-wider transition-colors flex items-center gap-1.5 rounded-none"
                   >
                     <RefreshCw className={`h-3 w-3 ${botBadgesLoading ? "animate-spin" : ""}`} />
-                    Sync Cashback Ledger
+                    Sync Status Ledger
                   </button>
                 </div>
 
@@ -2346,8 +1935,8 @@ export default function App() {
                           <th className="p-4">Rank / Bot ID</th>
                           <th className="p-4">Active Badge</th>
                           <th className="p-4">Total Txs</th>
-                          <th className="p-4 text-right">First TX Size</th>
-                          <th className="p-4 text-right text-yellow-600">Total Cashback Paid</th>
+                          <th className="p-4 text-right">Cumulative Volume</th>
+                          <th className="p-4 text-right text-zinc-500">Fees Collected (0.3%)</th>
                           <th className="p-4 text-right">Actions</th>
                         </tr>
                       </thead>
@@ -2365,14 +1954,14 @@ export default function App() {
                               </span>
                             </td>
                             <td className="p-4 font-semibold text-zinc-600">{bot.total_tx_count} transactions</td>
-                            <td className="p-4 text-right font-bold text-zinc-700">${Number(bot.first_tx_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td className="p-4 text-right font-bold text-emerald-600">${Number(bot.earned_cashback_usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-right font-bold text-zinc-700">${Number(bot.total_volume_usd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 text-right font-bold text-emerald-600">${Number((bot.total_volume_usd || 0) * 0.003).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             <td className="p-4 text-right">
                               <button
                                 onClick={() => { setBadgeQueryId(bot.bot_id); handleQueryBot(bot.bot_id); }}
                                 className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-[9px] font-bold uppercase tracking-wider text-zinc-700 transition-colors"
                               >
-                                View Milestones
+                                View Profile
                               </button>
                             </td>
                           </tr>
@@ -3695,97 +3284,73 @@ export class EthenaAdapter extends ProtocolAdapter {
   );
 }
 
-function CashbackCalculator() {
-  const [amount, setAmount] = useState(10000);
-  const [transactionsCount, setTransactionsCount] = useState(30);
+function ReputationExplorer() {
+  const [cumulativeVolume, setCumulativeVolume] = useState(50000);
 
-  // Map amount to badge
+  // Map volume to badge
   const getSimulatedBadge = (val: number) => {
-    if (val >= 100000000000) return { name: "OMEGA ARCHITECT", level: 9, range: "$100B+" };
-    if (val >= 1000000000) return { name: "QUANTUM SOVEREIGN", level: 8, range: "$1B - $99.9B" };
-    if (val >= 100000000) return { name: "NEXUS MAGNATE", level: 7, range: "$100M - $1B" };
-    if (val >= 10000000) return { name: "DIAMOND TITAN", level: 6, range: "$10M - $100M" };
-    if (val >= 1000000) return { name: "PLATINUM OVERLORD", level: 5, range: "$1M - $10M" };
-    if (val >= 100001) return { name: "GOLD EXECUTOR", level: 4, range: "$100,001 - $1M" };
-    if (val >= 10001) return { name: "STEEL STRATEGIST", level: 3, range: "$10,001 - $100k" };
-    if (val >= 1001) return { name: "IRON INITIATE", level: 2, range: "$1,001 - $10k" };
-    return { name: "PENNY SPARK", level: 1, range: "$1 - $1,000" };
+    if (val >= 100000000000) return { name: "OMEGA ARCHITECT", level: 9, range: "$100B+", status: "Supreme Multi-Chain Mastermind" };
+    if (val >= 1000000000) return { name: "QUANTUM SOVEREIGN", level: 8, range: "$1B - $99.9B", status: "Institutional Yield Overlord" };
+    if (val >= 100000000) return { name: "NEXUS MAGNATE", level: 7, range: "$100M - $1B", status: "Cross-Chain Capital Conductor" };
+    if (val >= 10000000) return { name: "DIAMOND TITAN", level: 6, range: "$10M - $100M", status: "Global MEV Nexus Engine" };
+    if (val >= 1000000) return { name: "PLATINUM OVERLORD", level: 5, range: "$1M - $10M", status: "Sovereign Liquidity Commander" };
+    if (val >= 100001) return { name: "GOLD EXECUTOR", level: 4, range: "$100,001 - $1M", status: "High-Throughput Arbitrage Core" };
+    if (val >= 10001) return { name: "STEEL STRATEGIST", level: 3, range: "$10,001 - $100k", status: "DeFi Yield Optimizer Probe" };
+    if (val >= 1001) return { name: "IRON INITIATE", level: 2, range: "$1,001 - $10k", status: "Hardened Local Liquidator" };
+    return { name: "PENNY SPARK", level: 1, range: "$1 - $1,000", status: "Junior High-Frequency Scout" };
   };
 
-  const badge = getSimulatedBadge(amount);
-  const milestoneCount = Math.floor(transactionsCount / 10);
-  const singleRebate = amount * 0.01;
-  const totalRebate = milestoneCount * singleRebate;
-  const originalFees = transactionsCount * amount * 0.01;
-  const netFees = originalFees - totalRebate;
+  const badge = getSimulatedBadge(cumulativeVolume);
+  const platformFees = cumulativeVolume * 0.003; // 0.3%
 
   return (
     <div className="bg-zinc-50 border border-zinc-200 p-5 space-y-4 rounded-none">
       <div className="space-y-1.5 text-left">
         <div className="flex justify-between text-[10px] font-mono uppercase text-zinc-400 font-bold">
-          <span>First Transaction Amount</span>
-          <span className="text-zinc-800 font-black">${amount.toLocaleString()}</span>
-        </div>
-        <input 
-          type="range" 
-          min="10" 
-          max="500000" 
-          step="100"
-          value={amount} 
-          onChange={(e) => setAmount(Number(e.target.value))}
-          className="w-full accent-zinc-900 h-1 bg-zinc-200 cursor-pointer"
-        />
-        <div className="flex justify-between text-[9px] font-mono text-zinc-400">
-          <span>$10 Min</span>
-          <span>$500k Max</span>
-        </div>
-      </div>
-
-      <div className="space-y-1.5 text-left">
-        <div className="flex justify-between text-[10px] font-mono uppercase text-zinc-400 font-bold">
-          <span>Target Total Transactions</span>
-          <span className="text-zinc-800 font-black">{transactionsCount} TXs</span>
+          <span>Simulated Cumulative Volume</span>
+          <span className="text-zinc-800 font-black">${cumulativeVolume.toLocaleString()}</span>
         </div>
         <input 
           type="range" 
           min="1" 
-          max="100" 
-          value={transactionsCount} 
-          onChange={(e) => setTransactionsCount(Number(e.target.value))}
+          max="10000000" 
+          step="100"
+          value={cumulativeVolume} 
+          onChange={(e) => setCumulativeVolume(Number(e.target.value))}
           className="w-full accent-zinc-900 h-1 bg-zinc-200 cursor-pointer"
         />
         <div className="flex justify-between text-[9px] font-mono text-zinc-400">
-          <span>1 TX</span>
-          <span>100 TXs</span>
+          <span>$1 Min</span>
+          <span>$10M Max</span>
         </div>
       </div>
 
       <div className="border-t border-zinc-200 pt-4 mt-2 grid grid-cols-2 gap-4 text-xs text-left">
         <div>
           <span className="text-[9px] font-mono uppercase text-zinc-400 block font-bold">Unlocked Badge</span>
-          <span className="text-zinc-800 font-bold uppercase font-mono">{badge.name}</span>
+          <span className="text-zinc-800 font-bold uppercase font-mono text-xs">{badge.name}</span>
         </div>
         <div>
-          <span className="text-[9px] font-mono uppercase text-zinc-400 block font-bold">Milestones Hit</span>
-          <span className="text-zinc-800 font-bold font-mono">{milestoneCount} milestones (every 10th TX)</span>
+          <span className="text-[9px] font-mono uppercase text-zinc-400 block font-bold">Badge Level</span>
+          <span className="text-zinc-800 font-bold font-mono">LEVEL 0{badge.level}</span>
         </div>
-        <div>
-          <span className="text-[9px] font-mono uppercase text-zinc-400 block font-bold">Base Fees (1%)</span>
-          <span className="text-zinc-600 font-bold font-mono">${originalFees.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+        <div className="col-span-2">
+          <span className="text-[9px] font-mono uppercase text-zinc-400 block font-bold">Reputation Class</span>
+          <span className="text-zinc-700 font-medium font-sans text-xs">{badge.status}</span>
         </div>
-        <div>
-          <span className="text-[9px] font-mono uppercase text-emerald-600 block font-bold">Instant Cashback</span>
-          <span className="text-emerald-600 font-black font-mono">${totalRebate.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+        <div className="col-span-2">
+          <span className="text-[9px] font-mono uppercase text-zinc-500 block font-bold">Platform Routing Fee (0.30%)</span>
+          <span className="text-zinc-900 font-extrabold font-mono text-sm">${platformFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       </div>
 
       <div className="bg-zinc-900 text-white p-4 text-center border border-zinc-800 rounded-none">
-        <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-400 block">Net Fee Rate After Cashbacks</span>
+        <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-400 block">Status Level Rank</span>
         <span className="text-xl font-mono font-bold text-yellow-500">
-          {originalFees > 0 ? ((netFees / (transactionsCount * amount)) * 100).toFixed(4) : "0.0000"}% 
+          RANK: {badge.name}
         </span>
         <span className="text-[9px] font-sans text-zinc-400 block mt-1.5 leading-normal">
-          Save <strong className="text-emerald-400">${totalRebate.toLocaleString()}</strong> in protocol routing fees!
+          Increase cumulative volume to climb the live bot status leaderboard!
         </span>
       </div>
     </div>
